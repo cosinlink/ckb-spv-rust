@@ -1,0 +1,27 @@
+[package]
+name = "ckb-spv"
+version = "0.1.0"
+authors = ["Ethan Hu <fendouhyz@163.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rocksdb = "0.13"
+crossbeam-channel = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.5"
+ctrlc = { version = "3.1", features = ["termination"] }
+rand = "0.6"
+clap = "2.33"
+bech32 = "0.6"
+merkle-cbt = "0.3"
+hex = "0.4"
+
+ckb-jsonrpc-types = { git = "https://github.com/nervosnetwork/ckb", tag = "v0.36.0-rc2" }
+ckb-hash = { git = "https://github.com/nervosnetwork/ckb", tag = "v0.36.0-rc2" }
+ckb-crypto = { git = "https://github.com/nervosnetwork/ckb", tag = "v0.36.0-rc2", features = ["secp"] }
+ckb-build-info = { git = "https://github.com/nervosnetwork/ckb", tag = "v0.36.0-rc2" }
+ckb-types = { git = "https://github.com/nervosnetwork/ckb", tag = "v0.36.0-rc2" }
+
+ckb-sdk = { git = "https://github.com/nervosnetwork/ckb-cli", tag = "v0.36.0"}
