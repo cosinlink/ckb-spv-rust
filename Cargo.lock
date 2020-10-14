@@ -551,11 +551,13 @@ dependencies = [
  "clap",
  "crossbeam-channel 0.3.9",
  "ctrlc",
+ "faster-hex 0.4.1",
  "hex",
  "merkle-cbt 0.3.0",
  "rand 0.6.5",
  "rocksdb",
  "serde",
+ "serde_json",
  "toml",
 ]
 
