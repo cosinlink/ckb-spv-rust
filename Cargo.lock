@@ -538,7 +538,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "ckb-spv"
+name = "ckb-spv-rust"
 version = "0.1.0"
 dependencies = [
  "bech32",

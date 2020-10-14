@@ -1,5 +1,5 @@
 [package]
-name = "ckb-spv"
+name = "ckb-spv-rust"
 version = "0.1.0"
 authors = ["Ethan Hu <fendouhyz@163.com>"]
 edition = "2018"
