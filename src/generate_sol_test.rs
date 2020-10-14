@@ -75,7 +75,7 @@ pub struct RpcData {
 
     extract_code_hash: Vec<TestCase<String, H256>>,
     extract_hash_type: Vec<TestCase<String, u8>>,
-    extract_args: Vec<TestCase<String, JsonBytes>>,
+    extract_args: Vec<TestCase<String, String>>,
 }
 
 impl Default for Loader {
@@ -200,7 +200,7 @@ fn to_json_test(scripts: Vec<Script>, cell_inputs: &mut Vec<CellInput>) {
 
         extract_args.push(TestCase {
             input: mol_hex.clone(),
-            output: script.args.clone(),
+            output: format!("0x{}", hex::encode(script.args.as_bytes())),
         });
     }
 
