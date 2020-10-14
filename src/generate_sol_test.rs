@@ -63,19 +63,19 @@ impl TryFrom<ConfigScript> for Script {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TestCase<I, O> {
-    input: Vec<I>,
-    output: Vec<O>,
+    input: I,
+    output: O,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct RpcData {
-    extract_since: TestCase<String, String>,
-    extract_previous_output: TestCase<String, String>,
+    extract_since: Vec<TestCase<String, String>>,
+    extract_previous_output: Vec<TestCase<String, String>>,
 
-    extract_code_hash: TestCase<String, H256>,
-    extract_hash_type: TestCase<String, u8>,
-    extract_args: TestCase<String, JsonBytes>,
+    extract_code_hash: Vec<TestCase<String, H256>>,
+    extract_hash_type: Vec<TestCase<String, u8>>,
+    extract_args: Vec<TestCase<String, JsonBytes>>,
 }
 
 impl Default for Loader {
@@ -162,57 +162,55 @@ pub fn generate_script_tests(tx_hashes: Vec<H256>) {
 
 fn to_json_test(scripts: Vec<Script>, cell_inputs: &mut Vec<CellInput>) {
     // CellInput items test
-    let mut inputs = vec![];
-    let mut since_vec = vec![];
-    let mut previous_outputs = vec![];
+    let mut extract_since = vec![];
+    let mut extract_previous_output = vec![];
 
     for cell_input in cell_inputs {
-        since_vec.push(format!("{}", cell_input.since.0));
+        let mol_input: packed::CellInput = cell_input.clone().into();
+        let mol_hex = format!("0x{}", hex::encode(mol_input.as_bytes().as_ref()));
+        extract_since.push(TestCase {
+            input: mol_hex.clone(),
+            output: format!("{}", cell_input.since.0),
+        });
 
         let outpoint: packed::OutPoint = cell_input.previous_output.clone().into();
-        previous_outputs.push(format!("0x{}", hex::encode(outpoint.as_bytes().as_ref())));
-
-        let input: packed::CellInput = cell_input.clone().into();
-        inputs.push(format!("0x{}", hex::encode(input.as_bytes().as_ref())));
+        extract_previous_output.push(TestCase {
+            input: mol_hex,
+            output: format!("0x{}", hex::encode(outpoint.as_bytes().as_ref())),
+        });
     }
 
     // Script items test
-    let mut script_inputs = vec![];
-    let mut code_hashes = vec![];
-    let mut hash_types = vec![];
-    let mut args_vec = vec![];
+    let mut extract_code_hash = vec![];
+    let mut extract_hash_type = vec![];
+    let mut extract_args = vec![];
     for script in scripts {
-        code_hashes.push(script.code_hash.clone());
-        hash_types.push(script.hash_type.clone() as u8);
-        args_vec.push(script.args.clone());
-        let mol_script: packed::Script = script.into();
-        script_inputs.push(format!("0x{}", hex::encode(mol_script.as_bytes().as_ref())));
+        let mol_script: packed::Script = script.clone().into();
+        let mol_hex = format!("0x{}", hex::encode(mol_script.as_bytes().as_ref()));
+
+        extract_code_hash.push(TestCase {
+            input: mol_hex.clone(),
+            output: script.code_hash.clone(),
+        });
+
+        extract_hash_type.push(TestCase {
+            input: mol_hex.clone(),
+            output: script.hash_type.clone() as u8,
+        });
+
+        extract_args.push(TestCase {
+            input: mol_hex.clone(),
+            output: script.args.clone(),
+        });
     }
 
     let rpc_data = RpcData {
-        extract_since: TestCase {
-            input: inputs.clone(),
-            output: since_vec.clone(),
-        },
+        extract_since,
+        extract_previous_output,
 
-        extract_previous_output: TestCase {
-            input: inputs.clone(),
-            output: previous_outputs.clone(),
-        },
-
-        extract_code_hash: TestCase {
-            input: script_inputs.clone(),
-            output: code_hashes.clone(),
-        },
-
-        extract_hash_type: TestCase {
-            input: script_inputs.clone(),
-            output: hash_types.clone(),
-        },
-        extract_args: TestCase {
-            input: script_inputs.clone(),
-            output: args_vec.clone(),
-        },
+        extract_code_hash,
+        extract_hash_type,
+        extract_args,
     };
 
     let str = serde_json::to_string(&rpc_data).unwrap();
