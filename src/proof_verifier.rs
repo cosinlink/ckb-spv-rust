@@ -10,7 +10,9 @@ use merkle_cbt::{merkle_tree::Merge, MerkleProof as ExMerkleProof, MerkleProof, 
 use serde::{Deserialize, Serialize};
 
 use crate::proof_generator::get_tx_index;
-use crate::types::{JsonMerkleProof, MergeByte32, TransactionProof, MAINNET_RPC_URL};
+use crate::types::transaction_proof::{
+    JsonMerkleProof, MergeByte32, TransactionProof, MAINNET_RPC_URL,
+};
 use ckb_jsonrpc_types::Uint32;
 use ckb_sdk::{
     rpc::{BlockView, RawHttpRpcClient, TransactionView, TransactionWithStatus},

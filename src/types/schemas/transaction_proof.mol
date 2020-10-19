@@ -1,0 +1,14 @@
+import basic;
+vector Uint32Vec <Uint32>;
+vector Byte32Vec <Byte32>;
+
+table JsonMerkleProof {
+    indices:                Uint32Vec,
+    lemmas:                 Byte32Vec,
+}
+
+table TransactionProof {
+    block_hash: Byte32,
+    witnesses_root: Byte32,
+    proof: JsonMerkleProof,
+}

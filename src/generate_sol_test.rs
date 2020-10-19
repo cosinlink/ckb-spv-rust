@@ -4,7 +4,9 @@ use ckb_jsonrpc_types::Uint32;
 use ckb_jsonrpc_types::{JsonBytes, ScriptHashType};
 use ckb_sdk::rpc::{CellInput, OutPoint};
 use ckb_sdk::{
-    rpc::{Header, BlockView, RawHttpRpcClient, Byte32, Script, TransactionView, TransactionWithStatus},
+    rpc::{
+        BlockView, Byte32, Header, RawHttpRpcClient, Script, TransactionView, TransactionWithStatus,
+    },
     wallet::KeyStore,
     GenesisInfo, HttpRpcClient,
 };
@@ -150,8 +152,11 @@ fn test_loader() {
     Loader::default().store_test_data(TEST_FILE_NAME, &test_data);
 }
 
-pub fn generate_script_tests(rpc_client: &mut HttpRpcClient, test_data: &mut RpcData, tx_hashes: Vec<H256>) {
-
+pub fn generate_script_tests(
+    rpc_client: &mut HttpRpcClient,
+    test_data: &mut RpcData,
+    tx_hashes: Vec<H256>,
+) {
     let mut hs_outputs = HashSet::new();
     let mut hs_inputs = HashSet::new();
     for tx_hash in tx_hashes {
@@ -226,12 +231,16 @@ pub fn generate_script_tests(rpc_client: &mut HttpRpcClient, test_data: &mut Rpc
     }
 }
 
-pub fn generate_header_tests(rpc_client: &mut HttpRpcClient, test_data: &mut RpcData, block_numbers: Vec<u64>) {
+pub fn generate_header_tests(
+    rpc_client: &mut HttpRpcClient,
+    test_data: &mut RpcData,
+    block_numbers: Vec<u64>,
+) {
     let mut hs_headers = HashSet::new();
     for number in block_numbers {
         match rpc_client.get_block_by_number(number).unwrap() {
             Some(block) => {
-                hs_headers.insert(block.header.inner );
+                hs_headers.insert(block.header.inner);
             }
             None => continue,
         }
@@ -245,20 +254,16 @@ pub fn generate_header_tests(rpc_client: &mut HttpRpcClient, test_data: &mut Rpc
         let mol_header_hex = format!("0x{}", hex::encode(mol_header.as_bytes().as_ref()));
         let mol_raw_header_hex = format!("0x{}", hex::encode(mol_raw_header.as_bytes().as_ref()));
 
-        test_data.extract_raw_header.push(
-            TestCase {
-                input: mol_header_hex.clone(),
-                output: mol_raw_header_hex.clone()
-            }
-        );
+        test_data.extract_raw_header.push(TestCase {
+            input: mol_header_hex.clone(),
+            output: mol_raw_header_hex.clone(),
+        });
 
-        let nonce: u128 =  header.nonce.into();
-        test_data.extract_nonce.push(
-            TestCase {
-                input: mol_header_hex,
-                output: format!("{}", nonce)
-            }
-        );
+        let nonce: u128 = header.nonce.into();
+        test_data.extract_nonce.push(TestCase {
+            input: mol_header_hex,
+            output: format!("{}", nonce),
+        });
 
         let version: u32 = mol_raw_header.version().unpack();
         let compact_target: u32 = mol_raw_header.compact_target().unpack();
@@ -266,63 +271,42 @@ pub fn generate_header_tests(rpc_client: &mut HttpRpcClient, test_data: &mut Rpc
         let number: u64 = mol_raw_header.number().unpack();
         let epoch: u64 = mol_raw_header.epoch().unpack();
 
-        test_data.extract_version.push(
-            TestCase {
-                input: mol_raw_header_hex.clone(),
-                output: format!("{}", version)
-            }
-        );
-        test_data.extract_compact_target.push(
-            TestCase {
-                input: mol_raw_header_hex.clone(),
-                output: format!("{}", compact_target)
-            }
-        );
-        test_data.extract_timestamp.push(
-            TestCase {
-                input: mol_raw_header_hex.clone(),
-                output: format!("{}",  timestamp)
-            }
-        );
-        test_data.extract_block_number.push(
-            TestCase {
-                input: mol_raw_header_hex.clone(),
-                output: format!("{}",  number)
-            }
-        );
-        test_data.extract_epoch.push(
-            TestCase {
-                input: mol_raw_header_hex.clone(),
-                output: format!("{}",  epoch)
-            }
-        );
+        test_data.extract_version.push(TestCase {
+            input: mol_raw_header_hex.clone(),
+            output: format!("{}", version),
+        });
+        test_data.extract_compact_target.push(TestCase {
+            input: mol_raw_header_hex.clone(),
+            output: format!("{}", compact_target),
+        });
+        test_data.extract_timestamp.push(TestCase {
+            input: mol_raw_header_hex.clone(),
+            output: format!("{}", timestamp),
+        });
+        test_data.extract_block_number.push(TestCase {
+            input: mol_raw_header_hex.clone(),
+            output: format!("{}", number),
+        });
+        test_data.extract_epoch.push(TestCase {
+            input: mol_raw_header_hex.clone(),
+            output: format!("{}", epoch),
+        });
 
-
-        test_data.extract_parent_hash.push(
-            TestCase {
-                input: mol_raw_header_hex.clone(),
-                output: header.parent_hash.clone(),
-            }
-        );
-
-        test_data.extract_transactions_root.push(
-            TestCase {
-                input: mol_raw_header_hex.clone(),
-                output: header.transactions_root.clone(),
-            }
-        );
-
-        test_data.extract_uncles_hash.push(
-            TestCase {
-                input: mol_raw_header_hex.clone(),
-                output: header.uncles_hash.clone(),
-            }
-        );
-        test_data.extract_dao.push(
-            TestCase {
-                input: mol_raw_header_hex.clone(),
-                output: header.dao.clone(),
-            }
-        );
+        test_data.extract_parent_hash.push(TestCase {
+            input: mol_raw_header_hex.clone(),
+            output: header.parent_hash.clone(),
+        });
+        test_data.extract_transactions_root.push(TestCase {
+            input: mol_raw_header_hex.clone(),
+            output: header.transactions_root.clone(),
+        });
+        test_data.extract_uncles_hash.push(TestCase {
+            input: mol_raw_header_hex.clone(),
+            output: header.uncles_hash.clone(),
+        });
+        test_data.extract_dao.push(TestCase {
+            input: mol_raw_header_hex.clone(),
+            output: header.dao.clone(),
+        });
     }
 }

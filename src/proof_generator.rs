@@ -9,7 +9,9 @@ use ckb_types::{
 use merkle_cbt::{merkle_tree::Merge, MerkleProof as ExMerkleProof, MerkleProof, CBMT as ExCBMT};
 use serde::{Deserialize, Serialize};
 
-use crate::types::{JsonMerkleProof, MergeByte32, TransactionProof, MAINNET_RPC_URL};
+use crate::types::transaction_proof::{
+    JsonMerkleProof, MergeByte32, TransactionProof, MAINNET_RPC_URL,
+};
 use ckb_jsonrpc_types::Uint32;
 use ckb_sdk::{
     rpc::{BlockView, RawHttpRpcClient, TransactionView, TransactionWithStatus},
