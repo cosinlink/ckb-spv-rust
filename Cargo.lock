@@ -554,6 +554,7 @@ dependencies = [
  "faster-hex 0.4.1",
  "hex",
  "merkle-cbt 0.3.0",
+ "molecule",
  "rand 0.6.5",
  "rocksdb",
  "serde",
