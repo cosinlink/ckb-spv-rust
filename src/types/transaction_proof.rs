@@ -27,6 +27,16 @@ pub struct TransactionProof {
     pub proof: JsonMerkleProof,
 }
 
+// tx_merkle_index == index in transactions merkle tree of the block
+#[derive(Clone, Default, Serialize, Deserialize, PartialEq, Eq, Hash, Debug)]
+pub struct CKBTxProof {
+    pub block_hash: H256,
+    pub tx_hash: H256,
+    pub tx_merkle_index: u16,
+    pub witnesses_root: H256,
+    pub lemmas: Vec<H256>,
+}
+
 #[derive(Clone, Default, Serialize, Deserialize, PartialEq, Eq, Hash, Debug)]
 pub struct JsonMerkleProof {
     pub indices: Vec<Uint32>,

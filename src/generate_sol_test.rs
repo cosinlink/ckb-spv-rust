@@ -1,5 +1,5 @@
 use crate::proof_generator::get_tx_index;
-use crate::types::{JsonMerkleProof, MergeByte32, TransactionProof, MAINNET_RPC_URL};
+use crate::types::transaction_proof::{JsonMerkleProof, MergeByte32, TransactionProof, MAINNET_RPC_URL};
 use ckb_jsonrpc_types::Uint32;
 use ckb_jsonrpc_types::{JsonBytes, ScriptHashType};
 use ckb_sdk::rpc::{CellInput, OutPoint};
