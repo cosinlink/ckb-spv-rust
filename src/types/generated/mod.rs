@@ -1,2 +1,2 @@
 pub mod basic;
-pub mod transaction_proof;
+pub mod ckb_tx_proof;

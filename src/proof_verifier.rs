@@ -10,7 +10,10 @@ use merkle_cbt::{merkle_tree::Merge, MerkleProof as ExMerkleProof, MerkleProof, 
 use serde::{Deserialize, Serialize};
 
 use crate::proof_generator::get_tx_index;
-use crate::types::transaction_proof::{JsonMerkleProof, MergeByte32, TransactionProof, MAINNET_RPC_URL, CKBTxProof};
+use crate::types::transaction_proof::{
+    CKBTxProof, JsonMerkleProof, MergeByte32, TransactionProof, MAINNET_RPC_URL,
+};
+use ckb_hash::new_blake2b;
 use ckb_jsonrpc_types::Uint32;
 use ckb_sdk::{
     rpc::{BlockView, RawHttpRpcClient, TransactionView, TransactionWithStatus},
@@ -18,7 +21,6 @@ use ckb_sdk::{
     GenesisInfo, HttpRpcClient,
 };
 use std::collections::HashSet;
-use ckb_hash::new_blake2b;
 
 pub fn calc_transactions_root(block: BlockView) -> Byte32 {
     let header_view: core::HeaderView = block.header.into();
@@ -70,17 +72,16 @@ pub fn verify_transaction_proof(tx_proof: TransactionProof) -> Result<Vec<H256>,
         .ok_or_else(|| format!("Invalid transaction proof"))
 }
 
-
 pub fn sibling(input: u16) -> u16 {
     if input == 0 {
-        return 0
+        return 0;
     }
     ((input + 1) ^ 1) - 1
 }
 
 pub fn parent(input: u16) -> u16 {
     if input == 0 {
-        return 0
+        return 0;
     }
     (input - 1) >> 1
 }
@@ -114,7 +115,7 @@ pub fn verify_ckb_single_tx_proof(tx_proof: CKBTxProof) -> bool {
     let witnesses_root = tx_proof.witnesses_root.pack();
     let raw_transactions_root = {
         let mut index = tx_proof.tx_merkle_index;
-        let mut res= tx_proof.tx_hash.pack();
+        let mut res = tx_proof.tx_hash.pack();
         let mut lemmas_index = 0;
 
         while lemmas_index < tx_proof.lemmas.len() {
@@ -133,7 +134,6 @@ pub fn verify_ckb_single_tx_proof(tx_proof: CKBTxProof) -> bool {
 
     merkle_root(&[raw_transactions_root, witnesses_root]) == expected_transactions_root
 }
-
 
 #[test]
 fn test_correct() {
@@ -166,7 +166,7 @@ fn test_correct_single_tx_proof() {
         h256!("0x0b332365bbdf1e7392af801e3f74496dfe94c22ac41e0e4b3924f352da5a3795"),
         h256!("0x55fbffa77f25fc53425f85d2fd7999b18a10bb55b3d70e9e61037a1138955c88"),
         h256!("0xce08d2fd4fe275ceddff74c8ae5d6ac27807b5c7788ed951c4f8e1ac507119a1"),
-        h256!("0x477f3cce8c1a61d35056dec9e0e2ba135614ce93cca3f898fe702b9774ee4d76")
+        h256!("0x477f3cce8c1a61d35056dec9e0e2ba135614ce93cca3f898fe702b9774ee4d76"),
     ];
 
     for tx_hash in tx_hashes {

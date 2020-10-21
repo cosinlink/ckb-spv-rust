@@ -56,7 +56,7 @@ pub fn generate_transaction_proof(tx_hashes: Vec<H256>) -> Result<TransactionPro
                         .get_block(retrieved_block_hash.clone().expect("tx_block_hash is none"))?
                         .expect("block is none");
                 } else if tx_block_hash != retrieved_block_hash {
-                    return Err(format!("Not all transactions found in retrieved block", ));
+                    return Err(format!("Not all transactions found in retrieved block",));
                 }
 
                 let tx_index = get_tx_index(&tx_hash, &retrieved_block)
@@ -87,7 +87,7 @@ pub fn generate_transaction_proof(tx_hashes: Vec<H256>) -> Result<TransactionPro
             .collect::<Vec<_>>(),
         &tx_indices.into_iter().collect::<Vec<_>>(),
     )
-        .expect("build proof with verified inputs should be OK");
+    .expect("build proof with verified inputs should be OK");
 
     Ok(TransactionProof {
         block_hash: retrieved_block_hash,
@@ -106,7 +106,6 @@ pub fn generate_transaction_proof(tx_hashes: Vec<H256>) -> Result<TransactionPro
         },
     })
 }
-
 
 pub fn generate_ckb_single_tx_proof(tx_hash: H256) -> Result<CKBTxProof, String> {
     let mut rpc_client = HttpRpcClient::new(MAINNET_RPC_URL.to_owned());
@@ -148,7 +147,8 @@ pub fn generate_ckb_single_tx_proof(tx_hash: H256) -> Result<CKBTxProof, String>
             .map(|tx| tx.hash.pack())
             .collect::<Vec<_>>(),
         &tx_indices.into_iter().collect::<Vec<_>>(),
-    ).expect("build proof with verified inputs should be OK");
+    )
+    .expect("build proof with verified inputs should be OK");
 
     // tx_merkle_index means the tx index in transactions merkle tree of the block
     Ok(CKBTxProof {
@@ -163,4 +163,3 @@ pub fn generate_ckb_single_tx_proof(tx_hash: H256) -> Result<CKBTxProof, String>
             .collect(),
     })
 }
-
