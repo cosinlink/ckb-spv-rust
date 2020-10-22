@@ -31,6 +31,7 @@ pub struct TransactionProof {
 #[derive(Clone, Default, Serialize, Deserialize, PartialEq, Eq, Hash, Debug)]
 pub struct CKBTxProof {
     pub tx_merkle_index: u16,
+    pub block_number: u64,
     pub block_hash: H256,
     pub tx_hash: H256,
     pub witnesses_root: H256,

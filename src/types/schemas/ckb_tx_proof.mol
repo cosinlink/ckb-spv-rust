@@ -3,6 +3,7 @@ vector Byte32Vec <Byte32>;
 
 table CkbTxProof {
     tx_merkle_index:        Uint16,
+    block_number:           Uint64,
     block_hash:             Byte32,
     tx_hash:                Byte32,
     witnesses_root:         Byte32,

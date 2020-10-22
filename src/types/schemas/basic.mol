@@ -1,2 +1,3 @@
 array Byte32 [byte; 32];
 array Uint16 [byte; 2];
+array Uint64 [byte; 8];

@@ -108,6 +108,12 @@ pub fn verify_ckb_single_tx_proof(tx_proof: CKBTxProof) -> bool {
             .unwrap()
             .expect("block is none");
         let header_view: core::HeaderView = block.header.into();
+
+        // verify block number
+        if header_view.number() != tx_proof.block_number {
+            return false;
+        }
+
         header_view.data().raw().transactions_root()
     };
 

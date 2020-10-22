@@ -153,6 +153,7 @@ pub fn generate_ckb_single_tx_proof(tx_hash: H256) -> Result<CKBTxProof, String>
     // tx_merkle_index means the tx index in transactions merkle tree of the block
     Ok(CKBTxProof {
         block_hash: retrieved_block_hash,
+        block_number: retrieved_block.header.inner.number,
         tx_hash: tx_hash.clone(),
         tx_merkle_index: (tx_index + tx_num as u32 - 1) as u16,
         witnesses_root: calc_witnesses_root(retrieved_block.transactions).unpack(),
