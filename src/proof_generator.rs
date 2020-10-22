@@ -10,7 +10,7 @@ use merkle_cbt::{merkle_tree::Merge, MerkleProof as ExMerkleProof, MerkleProof, 
 use serde::{Deserialize, Serialize};
 
 use crate::types::transaction_proof::{
-    CKBTxProof, JsonMerkleProof, MergeByte32, TransactionProof, MAINNET_RPC_URL,
+    CkbTxProof, JsonMerkleProof, MergeByte32, TransactionProof, MAINNET_RPC_URL,
 };
 use ckb_jsonrpc_types::Uint32;
 use ckb_sdk::{
@@ -107,7 +107,7 @@ pub fn generate_transaction_proof(tx_hashes: Vec<H256>) -> Result<TransactionPro
     })
 }
 
-pub fn generate_ckb_single_tx_proof(tx_hash: H256) -> Result<CKBTxProof, String> {
+pub fn generate_ckb_single_tx_proof(tx_hash: H256) -> Result<CkbTxProof, String> {
     let mut rpc_client = HttpRpcClient::new(MAINNET_RPC_URL.to_owned());
     let mut retrieved_block_hash = None;
     let mut retrieved_block = Default::default();
@@ -151,7 +151,7 @@ pub fn generate_ckb_single_tx_proof(tx_hash: H256) -> Result<CKBTxProof, String>
     .expect("build proof with verified inputs should be OK");
 
     // tx_merkle_index means the tx index in transactions merkle tree of the block
-    Ok(CKBTxProof {
+    Ok(CkbTxProof {
         block_hash: retrieved_block_hash,
         block_number: retrieved_block.header.inner.number,
         tx_hash: tx_hash.clone(),

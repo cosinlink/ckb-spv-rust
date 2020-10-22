@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::proof_generator::get_tx_index;
 use crate::types::transaction_proof::{
-    CKBTxProof, JsonMerkleProof, MergeByte32, TransactionProof, MAINNET_RPC_URL,
+    CkbTxProof, JsonMerkleProof, MergeByte32, TransactionProof, MAINNET_RPC_URL,
 };
 use ckb_hash::new_blake2b;
 use ckb_jsonrpc_types::Uint32;
@@ -100,7 +100,16 @@ pub fn merge(left: Byte32, right: Byte32) -> Byte32 {
     ret.pack()
 }
 
-pub fn verify_ckb_single_tx_proof(tx_proof: CKBTxProof) -> bool {
+/*
+CKBChain:  只验证 txHash 存在, rawTransaction， 不包含 witness
+
+
+Locker:
+
+
+*/
+
+pub fn verify_ckb_single_tx_proof(tx_proof: CkbTxProof) -> bool {
     let expected_transactions_root = {
         let mut rpc_client = HttpRpcClient::new(MAINNET_RPC_URL.to_owned());
         let block = rpc_client

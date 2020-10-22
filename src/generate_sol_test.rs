@@ -1,7 +1,7 @@
+use crate::proof_generator::generate_ckb_single_tx_proof;
 use crate::proof_generator::get_tx_index;
-use crate::types::transaction_proof::{
-    JsonMerkleProof, MergeByte32, TransactionProof, MAINNET_RPC_URL,
-};
+use crate::types::generated::ckb_tx_proof;
+use crate::types::transaction_proof::{CkbTxProof, JsonMerkleProof, MergeByte32, MAINNET_RPC_URL};
 use ckb_jsonrpc_types::Uint32;
 use ckb_jsonrpc_types::{JsonBytes, ScriptHashType};
 use ckb_sdk::rpc::{CellInput, OutPoint};
@@ -29,7 +29,8 @@ use std::convert::{TryFrom, TryInto};
 use std::{collections::HashSet, env, fmt, fs, marker::PhantomData, path::PathBuf};
 
 const RPC_DATA_NAME: &str = "origin_data.json";
-const TEST_FILE_NAME: &str = "testVectors.json";
+const TEST_VIEWCKB_FILE_NAME: &str = "testVectors.json";
+const TEST_VIEWSPV_FILE_NAME: &str = "testSPV.json";
 
 pub struct Loader(PathBuf);
 
@@ -73,7 +74,7 @@ pub struct TestCase<I, O> {
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
-pub struct RpcData {
+pub struct CKBRpcData {
     // members of CellInput
     extract_since: Vec<TestCase<String, String>>,
     extract_previous_output: Vec<TestCase<String, String>>,
@@ -97,6 +98,18 @@ pub struct RpcData {
     extract_transactions_root: Vec<TestCase<String, H256>>,
     extract_uncles_hash: Vec<TestCase<String, H256>>,
     extract_dao: Vec<TestCase<String, Byte32>>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct SpvRpcData {
+    // members of CKBTxProof
+    extract_tx_merkle_index: Vec<TestCase<String, String>>,
+    extract_block_number: Vec<TestCase<String, String>>,
+    extract_block_hash: Vec<TestCase<String, H256>>,
+    extract_tx_hash: Vec<TestCase<String, H256>>,
+    extract_witnesses_root: Vec<TestCase<String, H256>>,
+    extract_lemmas: Vec<TestCase<String, String>>,
 }
 
 impl Default for Loader {
@@ -127,7 +140,7 @@ impl Loader {
         serde_json::from_str(&json_str).expect("invalid rpc data json")
     }
 
-    pub fn store_test_data(&self, filename: &str, test_data: &RpcData) {
+    pub fn store_test_data<T: Serialize>(&self, filename: &str, test_data: &T) {
         let mut path = self.0.clone();
         path.push(filename);
         let str = serde_json::to_string(test_data).unwrap();
@@ -136,7 +149,7 @@ impl Loader {
 }
 
 #[test]
-fn test_loader() {
+fn generate_view_ckb_test() {
     let mut rpc_client = HttpRpcClient::new(MAINNET_RPC_URL.to_owned());
     let tx_hashes = vec![
         h256!("0x71a7ba8fc96349fea0ed3a5c47992e3b4084b031a42264a018e0072e8172e46c"),
@@ -146,17 +159,38 @@ fn test_loader() {
     ];
 
     let block_numbers = vec![1, 2, 5, 2000, 2_985_150];
-    let mut test_data = RpcData::default();
+    let mut test_data = CKBRpcData::default();
     generate_script_tests(&mut rpc_client, &mut test_data, tx_hashes);
     generate_header_tests(&mut rpc_client, &mut test_data, block_numbers);
 
     // store json string to file
-    Loader::default().store_test_data(TEST_FILE_NAME, &test_data);
+    Loader::default().store_test_data(TEST_VIEWCKB_FILE_NAME, &test_data);
+}
+
+#[test]
+fn generate_view_spv_test() {
+    let mut rpc_client = HttpRpcClient::new(MAINNET_RPC_URL.to_owned());
+    let tx_hashes = vec![
+        h256!("0x39e33c8ad2e7e4eb71610d2bcdfbb0cb0fde2f96418256914ad2f5be1d6e9331"),
+        h256!("0x3827275f7a9785b09d85c2e687338a3dfb3978656747c2449685f31293210e2f"),
+        h256!("0x02acc5ccc6073f371df6a89a6a1c22b567dbd1d82be2114c277d3f0f0cd07915"),
+        h256!("0x5094be43fd4c45fdf9446d1f46d9ce0124af6d2b9cdaed21ff5840ad684f8a02"),
+        h256!("0x0b332365bbdf1e7392af801e3f74496dfe94c22ac41e0e4b3924f352da5a3795"),
+        h256!("0x55fbffa77f25fc53425f85d2fd7999b18a10bb55b3d70e9e61037a1138955c88"),
+        h256!("0xce08d2fd4fe275ceddff74c8ae5d6ac27807b5c7788ed951c4f8e1ac507119a1"),
+        h256!("0x477f3cce8c1a61d35056dec9e0e2ba135614ce93cca3f898fe702b9774ee4d76"),
+    ];
+
+    let mut test_data = SpvRpcData::default();
+    generate_spv_tests(&mut test_data, tx_hashes);
+
+    // store json string to file
+    Loader::default().store_test_data(TEST_VIEWSPV_FILE_NAME, &test_data);
 }
 
 pub fn generate_script_tests(
     rpc_client: &mut HttpRpcClient,
-    test_data: &mut RpcData,
+    test_data: &mut CKBRpcData,
     tx_hashes: Vec<H256>,
 ) {
     let mut hs_outputs = HashSet::new();
@@ -233,9 +267,55 @@ pub fn generate_script_tests(
     }
 }
 
+pub fn generate_spv_tests(test_data: &mut SpvRpcData, tx_hashes: Vec<H256>) {
+    let mut hs_tx_proofs = HashSet::new();
+    for tx_hash in tx_hashes {
+        let tx_proof =
+            generate_ckb_single_tx_proof(tx_hash.clone()).expect("CKBTxProof generated failed");
+        hs_tx_proofs.insert(tx_proof);
+    }
+    let mut tx_proofs: Vec<CkbTxProof> = hs_tx_proofs.into_iter().collect();
+
+    // tx_proof items test
+    for tx_proof in tx_proofs {
+        let mol_tx_proof: ckb_tx_proof::CkbTxProof = tx_proof.clone().into();
+        let mol_hex = format!("0x{}", hex::encode(mol_tx_proof.as_bytes().as_ref()));
+
+        test_data.extract_tx_merkle_index.push(TestCase {
+            input: mol_hex.clone(),
+            output: format!("{}", tx_proof.tx_merkle_index),
+        });
+
+        test_data.extract_block_number.push(TestCase {
+            input: mol_hex.clone(),
+            output: format!("{}", tx_proof.block_number),
+        });
+
+        test_data.extract_block_hash.push(TestCase {
+            input: mol_hex.clone(),
+            output: tx_proof.block_hash,
+        });
+
+        test_data.extract_tx_hash.push(TestCase {
+            input: mol_hex.clone(),
+            output: tx_proof.tx_hash,
+        });
+
+        test_data.extract_witnesses_root.push(TestCase {
+            input: mol_hex.clone(),
+            output: tx_proof.witnesses_root,
+        });
+
+        test_data.extract_lemmas.push(TestCase {
+            input: mol_hex.clone(),
+            output: format!("0x{}", hex::encode(mol_tx_proof.lemmas().as_bytes().slice(4..))),
+        });
+    }
+}
+
 pub fn generate_header_tests(
     rpc_client: &mut HttpRpcClient,
-    test_data: &mut RpcData,
+    test_data: &mut CKBRpcData,
     block_numbers: Vec<u64>,
 ) {
     let mut hs_headers = HashSet::new();
