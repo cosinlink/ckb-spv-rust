@@ -1,7 +1,7 @@
 use ckb_types::{
     core::{self, cell::CellProvider, TransactionBuilder},
     h256,
-    packed::{self, Block, Byte32, Byte32Vec, Header, ProposalShortId},
+    packed::{self, Block, Byte32, Byte32Vec, Header, HeaderVec, ProposalShortId},
     prelude::*,
     utilities::{merkle_root, CBMT},
     H256,

@@ -100,16 +100,7 @@ pub fn merge(left: Byte32, right: Byte32) -> Byte32 {
     ret.pack()
 }
 
-/*
-CKBChain:  只验证 txHash 存在, rawTransaction， 不包含 witness
-
-
-Locker:
-
-
-*/
-
-pub fn verify_ckb_single_tx_proof(tx_proof: CkbTxProof) -> bool {
+pub fn verify_ckb_single_tx_proof(tx_proof: CkbTxProof) -> Result<H256, String> {
     let expected_transactions_root = {
         let mut rpc_client = HttpRpcClient::new(MAINNET_RPC_URL.to_owned());
         let block = rpc_client
@@ -120,7 +111,7 @@ pub fn verify_ckb_single_tx_proof(tx_proof: CkbTxProof) -> bool {
 
         // verify block number
         if header_view.number() != tx_proof.block_number {
-            return false;
+            return Err(format!("block number and block hash mismatch"));
         }
 
         header_view.data().raw().transactions_root()
@@ -147,7 +138,11 @@ pub fn verify_ckb_single_tx_proof(tx_proof: CkbTxProof) -> bool {
         res
     };
 
-    merkle_root(&[raw_transactions_root, witnesses_root]) == expected_transactions_root
+    if merkle_root(&[raw_transactions_root, witnesses_root]) == expected_transactions_root {
+        return Ok(expected_transactions_root.unpack());
+    }
+
+    Err(format!("proof not verified"))
 }
 
 #[test]
@@ -187,7 +182,21 @@ fn test_correct_single_tx_proof() {
     for tx_hash in tx_hashes {
         let mut proof = generate_ckb_single_tx_proof(tx_hash.clone()).unwrap();
         let result = verify_ckb_single_tx_proof(proof);
-        assert_eq!(result, true);
+        assert!(result.is_ok());
+    }
+}
+
+#[test]
+fn test_to_solidity_use() {
+    use crate::proof_generator::generate_ckb_single_tx_proof;
+    let tx_hashes: Vec<H256> = vec![h256!(
+        "0x39e33c8ad2e7e4eb71610d2bcdfbb0cb0fde2f96418256914ad2f5be1d6e9331"
+    )];
+
+    for tx_hash in tx_hashes {
+        let mut proof = generate_ckb_single_tx_proof(tx_hash.clone()).unwrap();
+        let result = verify_ckb_single_tx_proof(proof);
+        assert_eq!(result.is_ok(), true);
     }
 }
 

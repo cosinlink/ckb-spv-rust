@@ -138,7 +138,7 @@ pub fn generate_ckb_single_tx_proof(tx_hash: H256) -> Result<CkbTxProof, String>
     let tx_num = retrieved_block.transactions.len();
     let retrieved_block_hash = retrieved_block_hash.expect("checked len");
     dbg!(format!("{:#x}", retrieved_block_hash));
-    dbg!(format!("{:#x}", retrieved_block.header.hash));
+    dbg!(format!("{}", retrieved_block.header.inner.number));
 
     let proof = CBMT::build_merkle_proof(
         &retrieved_block

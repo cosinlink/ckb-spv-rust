@@ -1,5 +1,6 @@
 use crate::proof_generator::generate_ckb_single_tx_proof;
 use crate::proof_generator::get_tx_index;
+use crate::proof_verifier::verify_ckb_single_tx_proof;
 use crate::types::generated::ckb_tx_proof;
 use crate::types::transaction_proof::{CkbTxProof, JsonMerkleProof, MergeByte32, MAINNET_RPC_URL};
 use ckb_jsonrpc_types::Uint32;
@@ -110,6 +111,7 @@ pub struct SpvRpcData {
     extract_tx_hash: Vec<TestCase<String, H256>>,
     extract_witnesses_root: Vec<TestCase<String, H256>>,
     extract_lemmas: Vec<TestCase<String, String>>,
+    expected_transactions_root: Vec<TestCase<String, H256>>,
 }
 
 impl Default for Loader {
@@ -278,6 +280,7 @@ pub fn generate_spv_tests(test_data: &mut SpvRpcData, tx_hashes: Vec<H256>) {
 
     // tx_proof items test
     for tx_proof in tx_proofs {
+        let tx_proof_clone = tx_proof.clone();
         let mol_tx_proof: ckb_tx_proof::CkbTxProof = tx_proof.clone().into();
         let mol_hex = format!("0x{}", hex::encode(mol_tx_proof.as_bytes().as_ref()));
 
@@ -308,8 +311,16 @@ pub fn generate_spv_tests(test_data: &mut SpvRpcData, tx_hashes: Vec<H256>) {
 
         test_data.extract_lemmas.push(TestCase {
             input: mol_hex.clone(),
-            output: format!("0x{}", hex::encode(mol_tx_proof.lemmas().as_bytes().slice(4..))),
+            output: format!(
+                "0x{}",
+                hex::encode(mol_tx_proof.lemmas().as_bytes().slice(4..))
+            ),
         });
+
+        test_data.expected_transactions_root.push(TestCase {
+            input: mol_hex.clone(),
+            output: verify_ckb_single_tx_proof(tx_proof_clone).unwrap(),
+        })
     }
 }
 
