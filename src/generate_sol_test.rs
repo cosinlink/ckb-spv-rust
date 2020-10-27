@@ -22,7 +22,7 @@ use ckb_types::{
     utilities::{merkle_root, CBMT},
     H256,
 };
-use faster_hex::hex_decode;
+use faster_hex::{hex_decode, hex_encode};
 use merkle_cbt::{merkle_tree::Merge, MerkleProof as ExMerkleProof, MerkleProof, CBMT as ExCBMT};
 use serde::{de, Deserialize, Deserializer, Serialize};
 use serde_json;
@@ -99,6 +99,9 @@ pub struct CKBRpcData {
     extract_transactions_root: Vec<TestCase<String, H256>>,
     extract_uncles_hash: Vec<TestCase<String, H256>>,
     extract_dao: Vec<TestCase<String, Byte32>>,
+
+    // headers
+    index_header_vec: Vec<TestCase<String, Vec<String>>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
@@ -340,9 +343,19 @@ pub fn generate_header_tests(
     }
     let mut headers: Vec<Header> = hs_headers.into_iter().collect();
 
+    // generate headers vector
+    let header_vec = headers
+        .iter()
+        .map(|header| header.clone().into())
+        .collect::<Vec<packed::Header>>();
+
+    let mol_header_vec = packed::HeaderVec::new_builder().set(header_vec).build();
+    let mut expect_headers = vec![];
+
     for header in headers {
         let mol_header: packed::Header = header.clone().into();
         let mol_raw_header = mol_header.raw();
+        expect_headers.push(format!("0x{}", hex::encode(mol_header.clone().as_bytes())));
 
         let mol_header_hex = format!("0x{}", hex::encode(mol_header.as_bytes().as_ref()));
         let mol_raw_header_hex = format!("0x{}", hex::encode(mol_raw_header.as_bytes().as_ref()));
@@ -402,4 +415,9 @@ pub fn generate_header_tests(
             output: header.dao.clone(),
         });
     }
+
+    test_data.index_header_vec.push(TestCase {
+        input: format!("0x{}", hex::encode(mol_header_vec.as_bytes())),
+        output: expect_headers,
+    });
 }
