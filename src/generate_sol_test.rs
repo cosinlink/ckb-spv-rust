@@ -32,6 +32,7 @@ use std::{collections::HashSet, env, fmt, fs, marker::PhantomData, path::PathBuf
 const RPC_DATA_NAME: &str = "origin_data.json";
 const TEST_VIEWCKB_FILE_NAME: &str = "testVectors.json";
 const TEST_VIEWSPV_FILE_NAME: &str = "testSPV.json";
+const TEST_DATA_DIR: &str = "test-data";
 
 pub struct Loader(PathBuf);
 
@@ -128,7 +129,7 @@ impl Loader {
         let dir = env::current_dir().unwrap();
         let mut base_path = PathBuf::new();
         base_path.push(dir);
-        base_path.push("rpc-data");
+        base_path.push(TEST_DATA_DIR);
         Loader(base_path)
     }
 
