@@ -99,7 +99,7 @@ pub struct CKBRpcData {
     extract_parent_hash: Vec<TestCase<String, H256>>,
     extract_transactions_root: Vec<TestCase<String, H256>>,
     extract_uncles_hash: Vec<TestCase<String, H256>>,
-    extract_dao: Vec<TestCase<String, Byte32>>,
+    calculateBlockHash: Vec<TestCase<String, H256>>,
 
     // headers
     index_header_vec: Vec<TestCase<String, Vec<String>>>,
@@ -164,7 +164,7 @@ fn generate_view_ckb_test() {
         h256!("0x7356169e91f6c0eb7ba74a34232e49f16f011b3e97ede76f0c66cf230139a8ea"),
     ];
 
-    let block_numbers = vec![1, 2, 5, 2000, 2_985_150];
+    let block_numbers = vec![2000, 2001, 2002, 2003, 2004, 2005, 2006];
     let mut test_data = CKBRpcData::default();
     generate_script_tests(&mut rpc_client, &mut test_data, tx_hashes);
     generate_header_tests(&mut rpc_client, &mut test_data, block_numbers);
@@ -333,30 +333,43 @@ pub fn generate_header_tests(
     test_data: &mut CKBRpcData,
     block_numbers: Vec<u64>,
 ) {
-    let mut hs_headers = HashSet::new();
+    // let mut hs_headers = HashSet::new();
+    // let mut hs_block_hash = HashSet::new();
+    let mut headers: Vec<Header> = vec![];
+    let mut block_hashes: Vec<H256> = vec![];
+
     for number in block_numbers {
         match rpc_client.get_block_by_number(number).unwrap() {
             Some(block) => {
-                hs_headers.insert(block.header.inner);
+                headers.push(block.header.inner);
+                block_hashes.push(block.header.hash);
             }
             None => continue,
         }
     }
-    let mut headers: Vec<Header> = hs_headers.into_iter().collect();
 
     // generate headers vector
-    let header_vec = headers
+    let all_header_vec = headers
         .iter()
         .map(|header| header.clone().into())
         .collect::<Vec<packed::Header>>();
 
-    let mol_header_vec = packed::HeaderVec::new_builder().set(header_vec).build();
-    let mut expect_headers = vec![];
+    let mut all_headers_output = vec![];
+    let mut all_headers_input = vec![];
 
-    for header in headers {
+    for (index, header) in headers.iter().enumerate() {
+        // all_headers[index..end] is test-data origin data
+        let header_vec = all_header_vec[index..].to_vec();
+        let mol_header_vec = packed::HeaderVec::new_builder().set(header_vec).build();
+        all_headers_input.push(format!("0x{}", hex::encode(mol_header_vec.as_bytes())));
+
+        let mol_header: packed::Header = header.clone().into();
+        all_headers_output.push(format!("0x{}", hex::encode(mol_header.clone().as_bytes())));
+    }
+
+    for (index, header) in headers.iter().enumerate() {
         let mol_header: packed::Header = header.clone().into();
         let mol_raw_header = mol_header.raw();
-        expect_headers.push(format!("0x{}", hex::encode(mol_header.clone().as_bytes())));
 
         let mol_header_hex = format!("0x{}", hex::encode(mol_header.as_bytes().as_ref()));
         let mol_raw_header_hex = format!("0x{}", hex::encode(mol_raw_header.as_bytes().as_ref()));
@@ -368,7 +381,7 @@ pub fn generate_header_tests(
 
         let nonce: u128 = header.nonce.into();
         test_data.extract_nonce.push(TestCase {
-            input: mol_header_hex,
+            input: mol_header_hex.clone(),
             output: format!("{}", nonce),
         });
 
@@ -411,14 +424,16 @@ pub fn generate_header_tests(
             input: mol_raw_header_hex.clone(),
             output: header.uncles_hash.clone(),
         });
-        test_data.extract_dao.push(TestCase {
-            input: mol_raw_header_hex.clone(),
-            output: header.dao.clone(),
+        test_data.calculateBlockHash.push(TestCase {
+            input: mol_header_hex.clone(),
+            output: block_hashes[index].clone(),
+        });
+
+        // headerVec from index to end
+        let expect_header_vec = all_headers_output[index..].to_vec();
+        test_data.index_header_vec.push(TestCase {
+            input: all_headers_input[index].clone(),
+            output: expect_header_vec,
         });
     }
-
-    test_data.index_header_vec.push(TestCase {
-        input: format!("0x{}", hex::encode(mol_header_vec.as_bytes())),
-        output: expect_headers,
-    });
 }
