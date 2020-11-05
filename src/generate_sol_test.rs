@@ -15,7 +15,7 @@ use ckb_sdk::{
 };
 use ckb_types::{
     bytes::Bytes,
-    core::{self, cell::CellProvider, TransactionBuilder},
+    core::{self, cell::CellProvider, EpochNumberWithFraction, TransactionBuilder},
     h256,
     packed::{self, Block, ProposalShortId},
     prelude::*,
@@ -33,6 +33,11 @@ const RPC_DATA_NAME: &str = "origin_data.json";
 const TEST_VIEWCKB_FILE_NAME: &str = "testVectors.json";
 const TEST_VIEWSPV_FILE_NAME: &str = "testSPV.json";
 const TEST_DATA_DIR: &str = "test-data";
+
+pub const NUMBER_OFFSET: usize = 0;
+pub const NUMBER_BITS: usize = 24;
+pub const NUMBER_MAXIMUM_VALUE: u64 = (1u64 << NUMBER_BITS as u64);
+pub const NUMBER_MASK: u64 = (NUMBER_MAXIMUM_VALUE - 1);
 
 pub struct Loader(PathBuf);
 
@@ -156,6 +161,7 @@ impl Loader {
 
 #[test]
 fn generate_view_ckb_test() {
+    dbg!(NUMBER_MASK);
     let mut rpc_client = HttpRpcClient::new(MAINNET_RPC_URL.to_owned());
     let tx_hashes = vec![
         h256!("0x71a7ba8fc96349fea0ed3a5c47992e3b4084b031a42264a018e0072e8172e46c"),
@@ -389,7 +395,11 @@ pub fn generate_header_tests(
         let compact_target: u32 = mol_raw_header.compact_target().unpack();
         let timestamp: u64 = mol_raw_header.timestamp().unpack();
         let number: u64 = mol_raw_header.number().unpack();
-        let epoch: u64 = mol_raw_header.epoch().unpack();
+        let epoch_number: u64 = {
+            let value = header.epoch;
+            let epoch = core::EpochNumberWithFraction::from_full_value(value.0);
+            epoch.number()
+        };
 
         test_data.extract_version.push(TestCase {
             input: mol_raw_header_hex.clone(),
@@ -409,7 +419,7 @@ pub fn generate_header_tests(
         });
         test_data.extract_epoch.push(TestCase {
             input: mol_raw_header_hex.clone(),
-            output: format!("{}", epoch),
+            output: format!("{}", epoch_number),
         });
 
         test_data.extract_parent_hash.push(TestCase {
