@@ -61,6 +61,8 @@ impl From<CkbTxProof> for ckb_tx_proof::CkbTxProof {
             .set(mol_lemmas_vec)
             .build();
 
+        // basic to target
+        //  impl From<basic> for target
         ckb_tx_proof::CkbTxProof::new_builder()
             .tx_merkle_index(tx_merkle_index.into())
             .block_number(block_number.into())

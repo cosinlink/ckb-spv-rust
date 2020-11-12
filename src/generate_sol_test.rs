@@ -28,10 +28,12 @@ use serde::{de, Deserialize, Deserializer, Serialize};
 use serde_json;
 use std::convert::{TryFrom, TryInto};
 use std::{collections::HashSet, env, fmt, fs, marker::PhantomData, path::PathBuf};
+use std::{thread, time};
 
 const RPC_DATA_NAME: &str = "origin_data.json";
 const TEST_VIEWCKB_FILE_NAME: &str = "testVectors.json";
 const TEST_VIEWSPV_FILE_NAME: &str = "testSPV.json";
+const TEST_HEADERS_BENCH_FILE_NAME: &str = "testHeadersBench.json";
 const TEST_DATA_DIR: &str = "test-data";
 
 pub const NUMBER_OFFSET: usize = 0;
@@ -200,6 +202,21 @@ fn generate_view_spv_test() {
     Loader::default().store_test_data(TEST_VIEWSPV_FILE_NAME, &test_data);
 }
 
+#[test]
+fn generate_headers_benchmark_test() {
+    let mut rpc_client = HttpRpcClient::new(MAINNET_RPC_URL.to_owned());
+    let mut test_data = CKBRpcData::default();
+
+    let mut block_numbers = vec![];
+    for i in 3000..3200 {
+        block_numbers.push(i)
+    }
+    generate_header_tests(&mut rpc_client, &mut test_data, block_numbers);
+
+    // store json string to file
+    Loader::default().store_test_data(TEST_HEADERS_BENCH_FILE_NAME, &test_data);
+}
+
 pub fn generate_script_tests(
     rpc_client: &mut HttpRpcClient,
     test_data: &mut CKBRpcData,
@@ -352,6 +369,9 @@ pub fn generate_header_tests(
             }
             None => continue,
         }
+
+        let ten_millis = time::Duration::from_secs(2);
+        thread::sleep(ten_millis);
     }
 
     // generate headers vector
