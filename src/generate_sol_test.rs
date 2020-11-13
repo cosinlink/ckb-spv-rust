@@ -5,6 +5,7 @@ use crate::types::generated::ckb_tx_proof;
 use crate::types::transaction_proof::{CkbTxProof, JsonMerkleProof, MergeByte32, MAINNET_RPC_URL};
 use ckb_jsonrpc_types::Uint32;
 use ckb_jsonrpc_types::{JsonBytes, ScriptHashType};
+use ckb_pow::pow_message;
 use ckb_sdk::rpc::{CellInput, OutPoint};
 use ckb_sdk::{
     rpc::{
@@ -22,6 +23,8 @@ use ckb_types::{
     utilities::{merkle_root, CBMT},
     H256,
 };
+use eaglesong::eaglesong;
+
 use faster_hex::{hex_decode, hex_encode};
 use merkle_cbt::{merkle_tree::Merge, MerkleProof as ExMerkleProof, MerkleProof, CBMT as ExCBMT};
 use serde::{de, Deserialize, Deserializer, Serialize};
@@ -106,7 +109,8 @@ pub struct CKBRpcData {
     extract_parent_hash: Vec<TestCase<String, H256>>,
     extract_transactions_root: Vec<TestCase<String, H256>>,
     extract_uncles_hash: Vec<TestCase<String, H256>>,
-    calculateBlockHash: Vec<TestCase<String, H256>>,
+    calculate_block_hash: Vec<TestCase<String, H256>>,
+    calculate_eaglesong: Vec<TestCase<String, H256>>,
 
     // headers
     index_header_vec: Vec<TestCase<String, Vec<String>>>,
@@ -454,9 +458,21 @@ pub fn generate_header_tests(
             input: mol_raw_header_hex.clone(),
             output: header.uncles_hash.clone(),
         });
-        test_data.calculateBlockHash.push(TestCase {
+        test_data.calculate_block_hash.push(TestCase {
             input: mol_header_hex.clone(),
             output: block_hashes[index].clone(),
+        });
+
+        let (input, eaglesong_hash) = {
+            let input = pow_message(&mol_header.as_reader().calc_pow_hash(), nonce);
+            let mut output = [0u8; 32];
+            eaglesong(&input, &mut output);
+            (input, H256(output))
+        };
+
+        test_data.calculate_eaglesong.push(TestCase {
+            input: format!("0x{}", hex::encode(&input[..])),
+            output: eaglesong_hash,
         });
 
         // headerVec from index to end
