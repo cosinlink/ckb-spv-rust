@@ -27,6 +27,7 @@ use eaglesong::eaglesong;
 
 use faster_hex::{hex_decode, hex_encode};
 use merkle_cbt::{merkle_tree::Merge, MerkleProof as ExMerkleProof, MerkleProof, CBMT as ExCBMT};
+use rand::{thread_rng, Rng, SeedableRng};
 use serde::{de, Deserialize, Deserializer, Serialize};
 use serde_json;
 use std::convert::{TryFrom, TryInto};
@@ -37,6 +38,7 @@ const RPC_DATA_NAME: &str = "origin_data.json";
 const TEST_VIEWCKB_FILE_NAME: &str = "testVectors.json";
 const TEST_VIEWSPV_FILE_NAME: &str = "testSPV.json";
 const TEST_HEADERS_BENCH_FILE_NAME: &str = "testHeadersBench.json";
+const TEST_FUZZY_TEST_FILE_NAME: &str = "testEaglesongFuzzy.json";
 const TEST_DATA_DIR: &str = "test-data";
 
 pub const NUMBER_OFFSET: usize = 0;
@@ -219,6 +221,17 @@ fn generate_headers_benchmark_test() {
 
     // store json string to file
     Loader::default().store_test_data(TEST_HEADERS_BENCH_FILE_NAME, &test_data);
+}
+
+#[test]
+fn generate_eaglesong_fuzzy_test() {
+    let mut test_data = CKBRpcData::default();
+    let test_times = 1000;
+
+    generate_fuzzy_tests(&mut test_data, test_times);
+
+    // store json string to file
+    Loader::default().store_test_data(TEST_FUZZY_TEST_FILE_NAME, &test_data);
 }
 
 pub fn generate_script_tests(
@@ -480,6 +493,33 @@ pub fn generate_header_tests(
         test_data.index_header_vec.push(TestCase {
             input: all_headers_input[index].clone(),
             output: expect_header_vec,
+        });
+    }
+}
+
+pub fn generate_fuzzy_tests(test_data: &mut CKBRpcData, test_times: u32) {
+    for _ in 0..test_times {
+        let mut rng = thread_rng();
+        let (input, eaglesong_hash) = {
+            let mut input_32 = [0u8; 32];
+            rng.fill(&mut input_32);
+
+            let mut input_16 = [0u8; 16];
+            rng.fill(&mut input_16);
+
+            let input_48: Vec<u8> = [&input_32[..], &input_16[..]].concat();
+
+            let mut output = [0u8; 32];
+            eaglesong(input_48.as_slice(), &mut output);
+            (input_48, H256(output))
+        };
+
+        test_data.calculate_eaglesong.push(TestCase {
+            input: format!(
+                "0x{}00000000000000000000000000000000",
+                hex::encode(&input[..])
+            ),
+            output: eaglesong_hash,
         });
     }
 }
