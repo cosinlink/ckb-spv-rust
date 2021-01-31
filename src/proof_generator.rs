@@ -10,7 +10,8 @@ use merkle_cbt::{merkle_tree::Merge, MerkleProof as ExMerkleProof, MerkleProof, 
 use serde::{Deserialize, Serialize};
 
 use crate::types::transaction_proof::{
-    CkbTxProof, JsonMerkleProof, MergeByte32, TransactionProof, MAINNET_RPC_URL,
+    CkbHistoryTxRootProof, CkbTxProof, JsonMerkleProof, MergeByte32, TransactionProof,
+    MAINNET_RPC_URL,
 };
 use ckb_jsonrpc_types::Uint32;
 use ckb_sdk::{
@@ -157,6 +158,70 @@ pub fn generate_ckb_single_tx_proof(tx_hash: H256) -> Result<CkbTxProof, String>
         tx_hash: tx_hash.clone(),
         tx_merkle_index: (tx_index + tx_num as u32 - 1) as u16,
         witnesses_root: calc_witnesses_root(retrieved_block.transactions).unpack(),
+        lemmas: proof
+            .lemmas()
+            .iter()
+            .map(|lemma| Unpack::<H256>::unpack(lemma))
+            .collect(),
+    })
+}
+
+pub fn generate_ckb_history_tx_root_proof(
+    init_block_number: u64,
+    latest_block_number: u64,
+    block_numbers: Vec<u64>,
+) -> Result<CkbHistoryTxRootProof, String> {
+    let mut rpc_client = HttpRpcClient::new(MAINNET_RPC_URL.to_owned());
+    let mut tx_roots_indices: Vec<u32> = vec![];
+    let mut proof_leaves: Vec<H256> = vec![];
+    let mut all_tx_roots: Vec<H256> = vec![];
+    for number in init_block_number..latest_block_number + 1 {
+        match rpc_client.get_header_by_number(number)? {
+            Some(header_view) => all_tx_roots.push(header_view.inner.transactions_root),
+            None => {
+                return Err(format!(
+                    "cannot get the block transactions root, block_number = {}",
+                    number
+                ));
+            }
+        }
+    }
+
+    for number in block_numbers {
+        if number < init_block_number || number > latest_block_number {
+            return Err(format!(
+                "block number {} not yet between init_block_number {} and latest_block_number {}",
+                number, init_block_number, latest_block_number
+            ));
+        }
+
+        let index = (number - init_block_number) as u32;
+        tx_roots_indices.push(index);
+        proof_leaves.push(all_tx_roots.get(index as usize).unwrap().clone())
+    }
+
+    let tx_roots_num = latest_block_number - init_block_number + 1;
+    // dbg!(format!("{:#x}", retrieved_block_hash));
+    dbg!(format!("tx_roots_num: {}", tx_roots_num));
+
+    let proof = CBMT::build_merkle_proof(
+        &all_tx_roots
+            .iter()
+            .map(|tx_root| tx_root.pack())
+            .collect::<Vec<_>>(),
+        &tx_roots_indices.into_iter().collect::<Vec<_>>(),
+    )
+    .expect("build proof with verified inputs should be OK");
+
+    let mut indices = proof.indices().to_vec();
+    indices.sort_by(|a, b| b.cmp(a));
+    proof_leaves.reverse();
+
+    Ok(CkbHistoryTxRootProof {
+        init_block_number,
+        latest_block_number,
+        indices: indices.iter().map(|i| *i as u16).collect(),
+        proof_leaves,
         lemmas: proof
             .lemmas()
             .iter()

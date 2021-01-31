@@ -39,6 +39,16 @@ pub struct CkbTxProof {
     pub lemmas: Vec<H256>,
 }
 
+// tx_merkle_index == index in transactions merkle tree of the block
+#[derive(Clone, Default, Serialize, Deserialize, PartialEq, Eq, Hash, Debug)]
+pub struct CkbHistoryTxRootProof {
+    pub init_block_number: u64,
+    pub latest_block_number: u64,
+    pub indices: Vec<u16>,
+    pub proof_leaves: Vec<H256>,
+    pub lemmas: Vec<H256>,
+}
+
 // CKBChain   CkbTxProof
 // TokenLocker  unlockToken( CkbTxProof, RawTransaction + funding_input_index + extra )
 impl From<CkbTxProof> for ckb_tx_proof::CkbTxProof {
@@ -69,6 +79,55 @@ impl From<CkbTxProof> for ckb_tx_proof::CkbTxProof {
             .block_hash(block_hash.pack().into())
             .tx_hash(tx_hash.pack().into())
             .witnesses_root(witnesses_root.pack().into())
+            .lemmas(mol_lemmas)
+            .build()
+    }
+}
+
+// CKBChain   CkbTxProof
+// TokenLocker  unlockToken( CkbTxProof, RawTransaction + funding_input_index + extra )
+impl From<CkbHistoryTxRootProof> for ckb_tx_proof::CkbHistoryTxRootProof {
+    fn from(json: CkbHistoryTxRootProof) -> Self {
+        let CkbHistoryTxRootProof {
+            init_block_number,
+            latest_block_number,
+            indices,
+            proof_leaves,
+            lemmas,
+        } = json;
+
+        let mol_indices_vec: Vec<basic::Uint16> =
+            indices.iter().map(|i| (*i).into()).collect::<Vec<_>>();
+
+        let mol_indices = ckb_tx_proof::Uint16Vec::new_builder()
+            .set(mol_indices_vec)
+            .build();
+
+        let mol_proof_leaves_vec: Vec<basic::Byte32> = proof_leaves
+            .iter()
+            .map(|hash| hash.pack().into())
+            .collect::<Vec<_>>();
+
+        let mol_proof_leaves = ckb_tx_proof::Byte32Vec::new_builder()
+            .set(mol_proof_leaves_vec)
+            .build();
+
+        let mol_lemmas_vec: Vec<basic::Byte32> = lemmas
+            .iter()
+            .map(|hash| hash.pack().into())
+            .collect::<Vec<_>>();
+
+        let mol_lemmas = ckb_tx_proof::Byte32Vec::new_builder()
+            .set(mol_lemmas_vec)
+            .build();
+
+        // basic to target
+        //  impl From<basic> for target
+        ckb_tx_proof::CkbHistoryTxRootProof::new_builder()
+            .init_block_number(init_block_number.into())
+            .latest_block_number(latest_block_number.into())
+            .indices(mol_indices)
+            .proof_leaves(mol_proof_leaves)
             .lemmas(mol_lemmas)
             .build()
     }

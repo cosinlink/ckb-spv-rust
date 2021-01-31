@@ -11,7 +11,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::proof_generator::get_tx_index;
 use crate::types::transaction_proof::{
-    CkbTxProof, JsonMerkleProof, MergeByte32, TransactionProof, MAINNET_RPC_URL,
+    CkbHistoryTxRootProof, CkbTxProof, JsonMerkleProof, MergeByte32, TransactionProof,
+    MAINNET_RPC_URL,
 };
 use ckb_hash::new_blake2b;
 use ckb_jsonrpc_types::Uint32;
@@ -145,6 +146,86 @@ pub fn verify_ckb_single_tx_proof(tx_proof: CkbTxProof) -> Result<H256, String> 
     Err(format!("proof not verified"))
 }
 
+pub fn verify_ckb_history_tx_root_proof(
+    tx_roots_proof: CkbHistoryTxRootProof,
+) -> Result<H256, String> {
+    let mut rpc_client = HttpRpcClient::new(MAINNET_RPC_URL.to_owned());
+    let mut all_tx_roots: Vec<H256> = vec![];
+    for number in tx_roots_proof.init_block_number..tx_roots_proof.latest_block_number + 1 {
+        match rpc_client.get_header_by_number(number)? {
+            Some(header_view) => all_tx_roots.push(header_view.inner.transactions_root),
+            None => {
+                return Err(format!(
+                    "cannot get the block transactions root, block_number = {}",
+                    number
+                ));
+            }
+        }
+    }
+    let expect_tx_roots = {
+        let mut tmp: Vec<Byte32> = all_tx_roots.iter().map(|tx_root| tx_root.pack()).collect();
+        CBMT::build_merkle_root(tmp.as_slice())
+    };
+
+    // calc transactions_root from tx_proof
+    let mut queue = tx_roots_proof.proof_leaves.clone();
+    let mut indices = tx_roots_proof.indices.clone();
+    let mut queue_head = 0usize;
+    let mut queue_tail = queue.len();
+
+    // 确保 indices 是逆序的, 从高区块到低区块, proof_leaves 也按照这个顺序
+    let mut node_sibling;
+    let mut node_index;
+    let mut next;
+    let mut lemmas_index = 0;
+    let mut res;
+    let mut node = Default::default();
+    let actual_history_tx_roots_root = {
+        while queue_head < queue_tail {
+            node = queue.get(queue_head).unwrap().clone();
+            node_index = indices.get(queue_head).unwrap().clone();
+            if node_index == 0 {
+                break;
+            }
+
+            queue_head = queue_head + 1;
+
+            next = indices.get(queue_head);
+            if next.is_some() && next.unwrap().clone() == sibling(node_index) {
+                node_sibling = queue.get(queue_head).unwrap().clone();
+                queue_head = queue_head + 1;
+            } else {
+                if lemmas_index >= tx_roots_proof.lemmas.len() {
+                    return Err(format!("proof invalid"));
+                }
+                node_sibling = tx_roots_proof.lemmas.get(lemmas_index).unwrap().clone();
+                lemmas_index += 1;
+            }
+
+            res = if node_index < sibling(node_index) {
+                // dbg!(node.pack().clone(), node_sibling.pack().clone());
+                merge(node.pack(), node_sibling.pack())
+            } else {
+                // dbg!(node_sibling.pack().clone(), node.pack().clone());
+                merge(node_sibling.pack(), node.pack())
+            };
+
+            // dbg!(res.clone());
+
+            queue.push(res.unpack());
+            indices.push(parent(node_index));
+            queue_tail = queue_tail + 1;
+        }
+        node
+    };
+
+    if actual_history_tx_roots_root == expect_tx_roots.unpack() {
+        return Ok(actual_history_tx_roots_root);
+    }
+
+    Err(format!("proof not verified"))
+}
+
 #[test]
 fn test_correct() {
     use crate::proof_generator::generate_transaction_proof;
@@ -153,6 +234,22 @@ fn test_correct() {
     let result = verify_transaction_proof(proof).expect("proof should be verified");
     dbg!(format!("{:#x}", result[0].clone()));
     assert_eq!(tx_hash, result[0]);
+}
+
+#[test]
+fn test_more_leaves() {
+    use crate::proof_generator::generate_transaction_proof;
+    let tx_hashes = vec![
+        h256!("0x015aa60116ea60811207004edb1f4c6dfa4d23aad1467f629fda3a5de427c16b"),
+        h256!("0x8532426af2da301143626bd292640ff63457beeadae9ab0a46ed254c7fafe62b"),
+        h256!("0x83ae89de300b7ef46565f932a6a8ee425a67c3feab44aa725410e1ec099c506c"),
+        h256!("0x7835c3761a71df3276e2d76b2643eea1866eccff8f7d83ea0116710904e18d6e"),
+        h256!("0x39e33c8ad2e7e4eb71610d2bcdfbb0cb0fde2f96418256914ad2f5be1d6e9331"),
+        h256!("0x2154d077a6af711d93e8c7f75e3281a64708f97c2d485e5ecafaae12bdeecd7c"),
+    ];
+    let proof = generate_transaction_proof(tx_hashes).unwrap();
+    let result = verify_transaction_proof(proof).expect("proof should be verified");
+    dbg!(format!("{:#x}", result[0].clone()));
 }
 
 #[test]
@@ -211,4 +308,12 @@ fn test_wrong_block() {
 
     let result = verify_transaction_proof(proof);
     assert_eq!(Err(format!("Invalid transaction proof")), result)
+}
+
+#[test]
+fn test_tx_roots_proof() {
+    use crate::proof_generator::generate_ckb_history_tx_root_proof;
+    let block_numbers = vec![1, 3, 5, 6, 9, 25];
+    let tx_roots_proof = generate_ckb_history_tx_root_proof(1, 66, block_numbers).unwrap();
+    dbg!(verify_ckb_history_tx_root_proof(tx_roots_proof));
 }
