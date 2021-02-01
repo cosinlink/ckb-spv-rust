@@ -1,8 +1,10 @@
-use crate::proof_generator::generate_ckb_single_tx_proof;
 use crate::proof_generator::get_tx_index;
+use crate::proof_generator::{generate_ckb_history_tx_root_proof, generate_ckb_single_tx_proof};
 use crate::proof_verifier::verify_ckb_single_tx_proof;
 use crate::types::generated::ckb_tx_proof;
-use crate::types::transaction_proof::{CkbTxProof, JsonMerkleProof, MergeByte32, MAINNET_RPC_URL};
+use crate::types::transaction_proof::{
+    CkbHistoryTxRootProof, CkbTxProof, JsonMerkleProof, MergeByte32, MAINNET_RPC_URL,
+};
 use ckb_jsonrpc_types::Uint32;
 use ckb_jsonrpc_types::{JsonBytes, ScriptHashType};
 use ckb_pow::pow_message;
@@ -131,6 +133,17 @@ pub struct SpvRpcData {
     expected_transactions_root: Vec<TestCase<String, H256>>,
 }
 
+#[derive(Serialize, Deserialize, Debug, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct HistoryTxRootProofData {
+    // members of HistoryTxRootProof
+    extract_init_block_number: Vec<TestCase<String, String>>,
+    extract_latest_block_number: Vec<TestCase<String, String>>,
+    extract_indices: Vec<TestCase<String, String>>,
+    extract_proof_leaves: Vec<TestCase<String, String>>,
+    extract_lemmas: Vec<TestCase<String, String>>,
+}
+
 impl Default for Loader {
     fn default() -> Self {
         Self::with_current_dir()
@@ -203,6 +216,15 @@ fn generate_view_spv_test() {
 
     let mut test_data = SpvRpcData::default();
     generate_spv_tests(&mut test_data, tx_hashes);
+
+    // store json string to file
+    Loader::default().store_test_data(TEST_VIEWSPV_FILE_NAME, &test_data);
+}
+
+#[test]
+fn generate_view_history_tx_proof_test() {
+    let mut test_data = HistoryTxRootProofData::default();
+    generate_tx_root_proof_test(&mut test_data);
 
     // store json string to file
     Loader::default().store_test_data(TEST_VIEWSPV_FILE_NAME, &test_data);
@@ -365,6 +387,43 @@ pub fn generate_spv_tests(test_data: &mut SpvRpcData, tx_hashes: Vec<H256>) {
             input: mol_hex.clone(),
             output: verify_ckb_single_tx_proof(tx_proof_clone).unwrap(),
         })
+    }
+}
+
+pub fn generate_tx_root_proof_test(test_data: &mut HistoryTxRootProofData) {
+    let block_numbers_vec = vec![
+        vec![1u64, 2, 3, 4, 5],
+        vec![3100u64, 3196, 3300],
+        vec![93100u64, 93196, 97700],
+    ];
+
+    let mut hs_tx_proofs = HashSet::new();
+    for numbers in block_numbers_vec {
+        let history_tx_root_proof = generate_ckb_history_tx_root_proof(
+            numbers.first().unwrap().clone(),
+            numbers.last().unwrap().clone(),
+            numbers,
+        )
+        .expect("CKBTxProof generated failed");
+        hs_tx_proofs.insert(history_tx_root_proof);
+    }
+    let mut history_tx_root_proofs: Vec<CkbHistoryTxRootProof> = hs_tx_proofs.into_iter().collect();
+
+    // tx_proof items test
+    for proof in history_tx_root_proofs {
+        let proof_clone = proof.clone();
+        let mol_proof: ckb_tx_proof::CkbTxProof = proof.clone().into();
+        let mol_hex = format!("0x{}", hex::encode(mol_proof.as_bytes().as_ref()));
+
+        test_data.extract_init_block_number.push(TestCase {
+            input: mol_hex.clone(),
+            output: format!("{}", proof.init_block_number),
+        });
+
+        test_data.extract_latest_block_number.push(TestCase {
+            input: mol_hex.clone(),
+            output: format!("{}", proof.latest_block_number),
+        });
     }
 }
 

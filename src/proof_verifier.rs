@@ -173,7 +173,8 @@ pub fn verify_ckb_history_tx_root_proof(
     let mut queue_head = 0usize;
     let mut queue_tail = queue.len();
 
-    // 确保 indices 是逆序的, 从高区块到低区块, proof_leaves 也按照这个顺序
+    // Make sure that the indices are in reverse order,
+    // from high block to low block, and that the proof_leaves are in that order as well
     let mut node_sibling;
     let mut node_index;
     let mut next;
