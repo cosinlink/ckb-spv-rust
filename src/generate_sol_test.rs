@@ -1,6 +1,6 @@
 use crate::proof_generator::get_tx_index;
 use crate::proof_generator::{generate_ckb_history_tx_root_proof, generate_ckb_single_tx_proof};
-use crate::proof_verifier::verify_ckb_single_tx_proof;
+use crate::proof_verifier::{verify_ckb_history_tx_root_proof, verify_ckb_single_tx_proof};
 use crate::types::generated::ckb_tx_proof;
 use crate::types::transaction_proof::{
     CkbHistoryTxRootProof, CkbTxProof, JsonMerkleProof, MergeByte32, MAINNET_RPC_URL,
@@ -39,6 +39,7 @@ use std::{thread, time};
 const RPC_DATA_NAME: &str = "origin_data.json";
 const TEST_VIEWCKB_FILE_NAME: &str = "testVectors.json";
 const TEST_VIEWSPV_FILE_NAME: &str = "testSPV.json";
+const TEST_VIEW_HISTORY_TX_ROOT_FILE_NAME: &str = "testHistoryTxRoot.json";
 const TEST_HEADERS_BENCH_FILE_NAME: &str = "testHeadersBench.json";
 const TEST_FUZZY_TEST_FILE_NAME: &str = "testEaglesongFuzzy.json";
 const TEST_DATA_DIR: &str = "test-data";
@@ -227,7 +228,7 @@ fn generate_view_history_tx_proof_test() {
     generate_tx_root_proof_test(&mut test_data);
 
     // store json string to file
-    Loader::default().store_test_data(TEST_VIEWSPV_FILE_NAME, &test_data);
+    Loader::default().store_test_data(TEST_VIEW_HISTORY_TX_ROOT_FILE_NAME, &test_data);
 }
 
 #[test]
@@ -392,27 +393,32 @@ pub fn generate_spv_tests(test_data: &mut SpvRpcData, tx_hashes: Vec<H256>) {
 
 pub fn generate_tx_root_proof_test(test_data: &mut HistoryTxRootProofData) {
     let block_numbers_vec = vec![
-        vec![1u64, 2, 3, 4, 5],
+        vec![1u64, 2, 3, 4, 5, 6, 7, 8, 12, 16],
+        vec![1u64, 4, 5, 6, 7, 8, 12, 16],
+        vec![1u64, 9, 13, 16],
         vec![3100u64, 3196, 3300],
-        vec![93100u64, 93196, 97700],
+        vec![3100u64, 3196, 3199, 3222, 3233, 3300],
+        // vec![93100u64, 93196, 97700],
     ];
 
-    let mut hs_tx_proofs = HashSet::new();
+    let mut history_tx_root_proofs: Vec<CkbHistoryTxRootProof> = vec![];
     for numbers in block_numbers_vec {
+        dbg!(numbers.clone());
         let history_tx_root_proof = generate_ckb_history_tx_root_proof(
             numbers.first().unwrap().clone(),
             numbers.last().unwrap().clone(),
             numbers,
         )
         .expect("CKBTxProof generated failed");
-        hs_tx_proofs.insert(history_tx_root_proof);
+        history_tx_root_proofs.push(history_tx_root_proof);
+        dbg!("generate history_tx_root_proof success");
     }
-    let mut history_tx_root_proofs: Vec<CkbHistoryTxRootProof> = hs_tx_proofs.into_iter().collect();
 
     // tx_proof items test
     for proof in history_tx_root_proofs {
-        let proof_clone = proof.clone();
-        let mol_proof: ckb_tx_proof::CkbTxProof = proof.clone().into();
+        let expect_root = verify_ckb_history_tx_root_proof(proof.clone()).unwrap();
+        dbg!(expect_root.pack());
+        let mol_proof: ckb_tx_proof::CkbHistoryTxRootProof = proof.clone().into();
         let mol_hex = format!("0x{}", hex::encode(mol_proof.as_bytes().as_ref()));
 
         test_data.extract_init_block_number.push(TestCase {
@@ -423,6 +429,30 @@ pub fn generate_tx_root_proof_test(test_data: &mut HistoryTxRootProofData) {
         test_data.extract_latest_block_number.push(TestCase {
             input: mol_hex.clone(),
             output: format!("{}", proof.latest_block_number),
+        });
+
+        test_data.extract_indices.push(TestCase {
+            input: mol_hex.clone(),
+            output: format!(
+                "0x{}",
+                hex::encode(mol_proof.indices().as_bytes().slice(4..))
+            ),
+        });
+
+        test_data.extract_proof_leaves.push(TestCase {
+            input: mol_hex.clone(),
+            output: format!(
+                "0x{}",
+                hex::encode(mol_proof.proof_leaves().as_bytes().slice(4..))
+            ),
+        });
+
+        test_data.extract_lemmas.push(TestCase {
+            input: mol_hex.clone(),
+            output: format!(
+                "0x{}",
+                hex::encode(mol_proof.lemmas().as_bytes().slice(4..))
+            ),
         });
     }
 }
