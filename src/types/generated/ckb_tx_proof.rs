@@ -269,8 +269,8 @@ impl<'t: 'r, 'r> ::core::iter::ExactSizeIterator for Byte32VecReaderIterator<'t,
     }
 }
 #[derive(Clone)]
-pub struct Uint16Vec(molecule::bytes::Bytes);
-impl ::core::fmt::LowerHex for Uint16Vec {
+pub struct Uint64Vec(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for Uint64Vec {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
         if f.alternate() {
@@ -279,12 +279,12 @@ impl ::core::fmt::LowerHex for Uint16Vec {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-impl ::core::fmt::Debug for Uint16Vec {
+impl ::core::fmt::Debug for Uint64Vec {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-impl ::core::fmt::Display for Uint16Vec {
+impl ::core::fmt::Display for Uint64Vec {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{} [", Self::NAME)?;
         for i in 0..self.len() {
@@ -297,14 +297,14 @@ impl ::core::fmt::Display for Uint16Vec {
         write!(f, "]")
     }
 }
-impl ::core::default::Default for Uint16Vec {
+impl ::core::default::Default for Uint64Vec {
     fn default() -> Self {
         let v: Vec<u8> = vec![0, 0, 0, 0];
-        Uint16Vec::new_unchecked(v.into())
+        Uint64Vec::new_unchecked(v.into())
     }
 }
-impl Uint16Vec {
-    pub const ITEM_SIZE: usize = 2;
+impl Uint64Vec {
+    pub const ITEM_SIZE: usize = 8;
     pub fn total_size(&self) -> usize {
         molecule::NUMBER_SIZE * (self.item_count() + 1)
     }
@@ -317,27 +317,27 @@ impl Uint16Vec {
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
-    pub fn get(&self, idx: usize) -> Option<Uint16> {
+    pub fn get(&self, idx: usize) -> Option<Uint64> {
         if idx >= self.len() {
             None
         } else {
             Some(self.get_unchecked(idx))
         }
     }
-    pub fn get_unchecked(&self, idx: usize) -> Uint16 {
+    pub fn get_unchecked(&self, idx: usize) -> Uint64 {
         let start = molecule::NUMBER_SIZE + Self::ITEM_SIZE * idx;
         let end = start + Self::ITEM_SIZE;
-        Uint16::new_unchecked(self.0.slice(start..end))
+        Uint64::new_unchecked(self.0.slice(start..end))
     }
-    pub fn as_reader<'r>(&'r self) -> Uint16VecReader<'r> {
-        Uint16VecReader::new_unchecked(self.as_slice())
+    pub fn as_reader<'r>(&'r self) -> Uint64VecReader<'r> {
+        Uint64VecReader::new_unchecked(self.as_slice())
     }
 }
-impl molecule::prelude::Entity for Uint16Vec {
-    type Builder = Uint16VecBuilder;
-    const NAME: &'static str = "Uint16Vec";
+impl molecule::prelude::Entity for Uint64Vec {
+    type Builder = Uint64VecBuilder;
+    const NAME: &'static str = "Uint64Vec";
     fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
-        Uint16Vec(data)
+        Uint64Vec(data)
     }
     fn as_bytes(&self) -> molecule::bytes::Bytes {
         self.0.clone()
@@ -346,10 +346,10 @@ impl molecule::prelude::Entity for Uint16Vec {
         &self.0[..]
     }
     fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
-        Uint16VecReader::from_slice(slice).map(|reader| reader.to_entity())
+        Uint64VecReader::from_slice(slice).map(|reader| reader.to_entity())
     }
     fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
-        Uint16VecReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+        Uint64VecReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
     }
     fn new_builder() -> Self::Builder {
         ::core::default::Default::default()
@@ -359,8 +359,8 @@ impl molecule::prelude::Entity for Uint16Vec {
     }
 }
 #[derive(Clone, Copy)]
-pub struct Uint16VecReader<'r>(&'r [u8]);
-impl<'r> ::core::fmt::LowerHex for Uint16VecReader<'r> {
+pub struct Uint64VecReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for Uint64VecReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
         if f.alternate() {
@@ -369,12 +369,12 @@ impl<'r> ::core::fmt::LowerHex for Uint16VecReader<'r> {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-impl<'r> ::core::fmt::Debug for Uint16VecReader<'r> {
+impl<'r> ::core::fmt::Debug for Uint64VecReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-impl<'r> ::core::fmt::Display for Uint16VecReader<'r> {
+impl<'r> ::core::fmt::Display for Uint64VecReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{} [", Self::NAME)?;
         for i in 0..self.len() {
@@ -387,8 +387,8 @@ impl<'r> ::core::fmt::Display for Uint16VecReader<'r> {
         write!(f, "]")
     }
 }
-impl<'r> Uint16VecReader<'r> {
-    pub const ITEM_SIZE: usize = 2;
+impl<'r> Uint64VecReader<'r> {
+    pub const ITEM_SIZE: usize = 8;
     pub fn total_size(&self) -> usize {
         molecule::NUMBER_SIZE * (self.item_count() + 1)
     }
@@ -401,27 +401,27 @@ impl<'r> Uint16VecReader<'r> {
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
-    pub fn get(&self, idx: usize) -> Option<Uint16Reader<'r>> {
+    pub fn get(&self, idx: usize) -> Option<Uint64Reader<'r>> {
         if idx >= self.len() {
             None
         } else {
             Some(self.get_unchecked(idx))
         }
     }
-    pub fn get_unchecked(&self, idx: usize) -> Uint16Reader<'r> {
+    pub fn get_unchecked(&self, idx: usize) -> Uint64Reader<'r> {
         let start = molecule::NUMBER_SIZE + Self::ITEM_SIZE * idx;
         let end = start + Self::ITEM_SIZE;
-        Uint16Reader::new_unchecked(&self.as_slice()[start..end])
+        Uint64Reader::new_unchecked(&self.as_slice()[start..end])
     }
 }
-impl<'r> molecule::prelude::Reader<'r> for Uint16VecReader<'r> {
-    type Entity = Uint16Vec;
-    const NAME: &'static str = "Uint16VecReader";
+impl<'r> molecule::prelude::Reader<'r> for Uint64VecReader<'r> {
+    type Entity = Uint64Vec;
+    const NAME: &'static str = "Uint64VecReader";
     fn to_entity(&self) -> Self::Entity {
         Self::Entity::new_unchecked(self.as_slice().to_owned().into())
     }
     fn new_unchecked(slice: &'r [u8]) -> Self {
-        Uint16VecReader(slice)
+        Uint64VecReader(slice)
     }
     fn as_slice(&self) -> &'r [u8] {
         self.0
@@ -447,27 +447,27 @@ impl<'r> molecule::prelude::Reader<'r> for Uint16VecReader<'r> {
     }
 }
 #[derive(Debug, Default)]
-pub struct Uint16VecBuilder(pub(crate) Vec<Uint16>);
-impl Uint16VecBuilder {
-    pub const ITEM_SIZE: usize = 2;
-    pub fn set(mut self, v: Vec<Uint16>) -> Self {
+pub struct Uint64VecBuilder(pub(crate) Vec<Uint64>);
+impl Uint64VecBuilder {
+    pub const ITEM_SIZE: usize = 8;
+    pub fn set(mut self, v: Vec<Uint64>) -> Self {
         self.0 = v;
         self
     }
-    pub fn push(mut self, v: Uint16) -> Self {
+    pub fn push(mut self, v: Uint64) -> Self {
         self.0.push(v);
         self
     }
-    pub fn extend<T: ::core::iter::IntoIterator<Item = Uint16>>(mut self, iter: T) -> Self {
+    pub fn extend<T: ::core::iter::IntoIterator<Item = Uint64>>(mut self, iter: T) -> Self {
         for elem in iter {
             self.0.push(elem);
         }
         self
     }
 }
-impl molecule::prelude::Builder for Uint16VecBuilder {
-    type Entity = Uint16Vec;
-    const NAME: &'static str = "Uint16VecBuilder";
+impl molecule::prelude::Builder for Uint64VecBuilder {
+    type Entity = Uint64Vec;
+    const NAME: &'static str = "Uint64VecBuilder";
     fn expected_length(&self) -> usize {
         molecule::NUMBER_SIZE + Self::ITEM_SIZE * self.0.len()
     }
@@ -482,12 +482,12 @@ impl molecule::prelude::Builder for Uint16VecBuilder {
         let mut inner = Vec::with_capacity(self.expected_length());
         self.write(&mut inner)
             .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
-        Uint16Vec::new_unchecked(inner.into())
+        Uint64Vec::new_unchecked(inner.into())
     }
 }
-pub struct Uint16VecIterator(Uint16Vec, usize, usize);
-impl ::core::iter::Iterator for Uint16VecIterator {
-    type Item = Uint16;
+pub struct Uint64VecIterator(Uint64Vec, usize, usize);
+impl ::core::iter::Iterator for Uint64VecIterator {
+    type Item = Uint64;
     fn next(&mut self) -> Option<Self::Item> {
         if self.1 >= self.2 {
             None
@@ -498,27 +498,27 @@ impl ::core::iter::Iterator for Uint16VecIterator {
         }
     }
 }
-impl ::core::iter::ExactSizeIterator for Uint16VecIterator {
+impl ::core::iter::ExactSizeIterator for Uint64VecIterator {
     fn len(&self) -> usize {
         self.2 - self.1
     }
 }
-impl ::core::iter::IntoIterator for Uint16Vec {
-    type Item = Uint16;
-    type IntoIter = Uint16VecIterator;
+impl ::core::iter::IntoIterator for Uint64Vec {
+    type Item = Uint64;
+    type IntoIter = Uint64VecIterator;
     fn into_iter(self) -> Self::IntoIter {
         let len = self.len();
-        Uint16VecIterator(self, 0, len)
+        Uint64VecIterator(self, 0, len)
     }
 }
-impl<'r> Uint16VecReader<'r> {
-    pub fn iter<'t>(&'t self) -> Uint16VecReaderIterator<'t, 'r> {
-        Uint16VecReaderIterator(&self, 0, self.len())
+impl<'r> Uint64VecReader<'r> {
+    pub fn iter<'t>(&'t self) -> Uint64VecReaderIterator<'t, 'r> {
+        Uint64VecReaderIterator(&self, 0, self.len())
     }
 }
-pub struct Uint16VecReaderIterator<'t, 'r>(&'t Uint16VecReader<'r>, usize, usize);
-impl<'t: 'r, 'r> ::core::iter::Iterator for Uint16VecReaderIterator<'t, 'r> {
-    type Item = Uint16Reader<'t>;
+pub struct Uint64VecReaderIterator<'t, 'r>(&'t Uint64VecReader<'r>, usize, usize);
+impl<'t: 'r, 'r> ::core::iter::Iterator for Uint64VecReaderIterator<'t, 'r> {
+    type Item = Uint64Reader<'t>;
     fn next(&mut self) -> Option<Self::Item> {
         if self.1 >= self.2 {
             None
@@ -529,14 +529,14 @@ impl<'t: 'r, 'r> ::core::iter::Iterator for Uint16VecReaderIterator<'t, 'r> {
         }
     }
 }
-impl<'t: 'r, 'r> ::core::iter::ExactSizeIterator for Uint16VecReaderIterator<'t, 'r> {
+impl<'t: 'r, 'r> ::core::iter::ExactSizeIterator for Uint64VecReaderIterator<'t, 'r> {
     fn len(&self) -> usize {
         self.2 - self.1
     }
 }
 #[derive(Clone)]
-pub struct CkbTxProof(molecule::bytes::Bytes);
-impl ::core::fmt::LowerHex for CkbTxProof {
+pub struct Bytes(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for Bytes {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
         if f.alternate() {
@@ -545,106 +545,62 @@ impl ::core::fmt::LowerHex for CkbTxProof {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-impl ::core::fmt::Debug for CkbTxProof {
+impl ::core::fmt::Debug for Bytes {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-impl ::core::fmt::Display for CkbTxProof {
+impl ::core::fmt::Display for Bytes {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
-        write!(f, "{} {{ ", Self::NAME)?;
-        write!(f, "{}: {}", "tx_merkle_index", self.tx_merkle_index())?;
-        write!(f, ", {}: {}", "block_number", self.block_number())?;
-        write!(f, ", {}: {}", "block_hash", self.block_hash())?;
-        write!(f, ", {}: {}", "tx_hash", self.tx_hash())?;
-        write!(f, ", {}: {}", "witnesses_root", self.witnesses_root())?;
-        write!(f, ", {}: {}", "lemmas", self.lemmas())?;
-        let extra_count = self.count_extra_fields();
-        if extra_count != 0 {
-            write!(f, ", .. ({} fields)", extra_count)?;
-        }
-        write!(f, " }}")
+        use molecule::hex_string;
+        let raw_data = hex_string(&self.raw_data());
+        write!(f, "{}(0x{})", Self::NAME, raw_data)
     }
 }
-impl ::core::default::Default for CkbTxProof {
+impl ::core::default::Default for Bytes {
     fn default() -> Self {
-        let v: Vec<u8> = vec![
-            138, 0, 0, 0, 28, 0, 0, 0, 30, 0, 0, 0, 38, 0, 0, 0, 70, 0, 0, 0, 102, 0, 0, 0, 134, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        ];
-        CkbTxProof::new_unchecked(v.into())
+        let v: Vec<u8> = vec![0, 0, 0, 0];
+        Bytes::new_unchecked(v.into())
     }
 }
-impl CkbTxProof {
-    pub const FIELD_COUNT: usize = 6;
+impl Bytes {
+    pub const ITEM_SIZE: usize = 1;
     pub fn total_size(&self) -> usize {
+        molecule::NUMBER_SIZE * (self.item_count() + 1)
+    }
+    pub fn item_count(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
     }
-    pub fn field_count(&self) -> usize {
-        if self.total_size() == molecule::NUMBER_SIZE {
-            0
+    pub fn len(&self) -> usize {
+        self.item_count()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+    pub fn get(&self, idx: usize) -> Option<Byte> {
+        if idx >= self.len() {
+            None
         } else {
-            (molecule::unpack_number(&self.as_slice()[molecule::NUMBER_SIZE..]) as usize / 4) - 1
+            Some(self.get_unchecked(idx))
         }
     }
-    pub fn count_extra_fields(&self) -> usize {
-        self.field_count() - Self::FIELD_COUNT
+    pub fn get_unchecked(&self, idx: usize) -> Byte {
+        let start = molecule::NUMBER_SIZE + Self::ITEM_SIZE * idx;
+        let end = start + Self::ITEM_SIZE;
+        Byte::new_unchecked(self.0.slice(start..end))
     }
-    pub fn has_extra_fields(&self) -> bool {
-        Self::FIELD_COUNT != self.field_count()
+    pub fn raw_data(&self) -> molecule::bytes::Bytes {
+        self.0.slice(molecule::NUMBER_SIZE..)
     }
-    pub fn tx_merkle_index(&self) -> Uint16 {
-        let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[4..]) as usize;
-        let end = molecule::unpack_number(&slice[8..]) as usize;
-        Uint16::new_unchecked(self.0.slice(start..end))
-    }
-    pub fn block_number(&self) -> Uint64 {
-        let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[8..]) as usize;
-        let end = molecule::unpack_number(&slice[12..]) as usize;
-        Uint64::new_unchecked(self.0.slice(start..end))
-    }
-    pub fn block_hash(&self) -> Byte32 {
-        let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[12..]) as usize;
-        let end = molecule::unpack_number(&slice[16..]) as usize;
-        Byte32::new_unchecked(self.0.slice(start..end))
-    }
-    pub fn tx_hash(&self) -> Byte32 {
-        let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[16..]) as usize;
-        let end = molecule::unpack_number(&slice[20..]) as usize;
-        Byte32::new_unchecked(self.0.slice(start..end))
-    }
-    pub fn witnesses_root(&self) -> Byte32 {
-        let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[20..]) as usize;
-        let end = molecule::unpack_number(&slice[24..]) as usize;
-        Byte32::new_unchecked(self.0.slice(start..end))
-    }
-    pub fn lemmas(&self) -> Byte32Vec {
-        let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[24..]) as usize;
-        if self.has_extra_fields() {
-            let end = molecule::unpack_number(&slice[28..]) as usize;
-            Byte32Vec::new_unchecked(self.0.slice(start..end))
-        } else {
-            Byte32Vec::new_unchecked(self.0.slice(start..))
-        }
-    }
-    pub fn as_reader<'r>(&'r self) -> CkbTxProofReader<'r> {
-        CkbTxProofReader::new_unchecked(self.as_slice())
+    pub fn as_reader<'r>(&'r self) -> BytesReader<'r> {
+        BytesReader::new_unchecked(self.as_slice())
     }
 }
-impl molecule::prelude::Entity for CkbTxProof {
-    type Builder = CkbTxProofBuilder;
-    const NAME: &'static str = "CkbTxProof";
+impl molecule::prelude::Entity for Bytes {
+    type Builder = BytesBuilder;
+    const NAME: &'static str = "Bytes";
     fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
-        CkbTxProof(data)
+        Bytes(data)
     }
     fn as_bytes(&self) -> molecule::bytes::Bytes {
         self.0.clone()
@@ -653,27 +609,21 @@ impl molecule::prelude::Entity for CkbTxProof {
         &self.0[..]
     }
     fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
-        CkbTxProofReader::from_slice(slice).map(|reader| reader.to_entity())
+        BytesReader::from_slice(slice).map(|reader| reader.to_entity())
     }
     fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
-        CkbTxProofReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+        BytesReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
     }
     fn new_builder() -> Self::Builder {
         ::core::default::Default::default()
     }
     fn as_builder(self) -> Self::Builder {
-        Self::new_builder()
-            .tx_merkle_index(self.tx_merkle_index())
-            .block_number(self.block_number())
-            .block_hash(self.block_hash())
-            .tx_hash(self.tx_hash())
-            .witnesses_root(self.witnesses_root())
-            .lemmas(self.lemmas())
+        Self::new_builder().extend(self.into_iter())
     }
 }
 #[derive(Clone, Copy)]
-pub struct CkbTxProofReader<'r>(&'r [u8]);
-impl<'r> ::core::fmt::LowerHex for CkbTxProofReader<'r> {
+pub struct BytesReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for BytesReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
         if f.alternate() {
@@ -682,20 +632,169 @@ impl<'r> ::core::fmt::LowerHex for CkbTxProofReader<'r> {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-impl<'r> ::core::fmt::Debug for CkbTxProofReader<'r> {
+impl<'r> ::core::fmt::Debug for BytesReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-impl<'r> ::core::fmt::Display for CkbTxProofReader<'r> {
+impl<'r> ::core::fmt::Display for BytesReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        let raw_data = hex_string(&self.raw_data());
+        write!(f, "{}(0x{})", Self::NAME, raw_data)
+    }
+}
+impl<'r> BytesReader<'r> {
+    pub const ITEM_SIZE: usize = 1;
+    pub fn total_size(&self) -> usize {
+        molecule::NUMBER_SIZE * (self.item_count() + 1)
+    }
+    pub fn item_count(&self) -> usize {
+        molecule::unpack_number(self.as_slice()) as usize
+    }
+    pub fn len(&self) -> usize {
+        self.item_count()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+    pub fn get(&self, idx: usize) -> Option<ByteReader<'r>> {
+        if idx >= self.len() {
+            None
+        } else {
+            Some(self.get_unchecked(idx))
+        }
+    }
+    pub fn get_unchecked(&self, idx: usize) -> ByteReader<'r> {
+        let start = molecule::NUMBER_SIZE + Self::ITEM_SIZE * idx;
+        let end = start + Self::ITEM_SIZE;
+        ByteReader::new_unchecked(&self.as_slice()[start..end])
+    }
+    pub fn raw_data(&self) -> &'r [u8] {
+        &self.as_slice()[molecule::NUMBER_SIZE..]
+    }
+}
+impl<'r> molecule::prelude::Reader<'r> for BytesReader<'r> {
+    type Entity = Bytes;
+    const NAME: &'static str = "BytesReader";
+    fn to_entity(&self) -> Self::Entity {
+        Self::Entity::new_unchecked(self.as_slice().to_owned().into())
+    }
+    fn new_unchecked(slice: &'r [u8]) -> Self {
+        BytesReader(slice)
+    }
+    fn as_slice(&self) -> &'r [u8] {
+        self.0
+    }
+    fn verify(slice: &[u8], _compatible: bool) -> molecule::error::VerificationResult<()> {
+        use molecule::verification_error as ve;
+        let slice_len = slice.len();
+        if slice_len < molecule::NUMBER_SIZE {
+            return ve!(Self, HeaderIsBroken, molecule::NUMBER_SIZE, slice_len);
+        }
+        let item_count = molecule::unpack_number(slice) as usize;
+        if item_count == 0 {
+            if slice_len != molecule::NUMBER_SIZE {
+                return ve!(Self, TotalSizeNotMatch, molecule::NUMBER_SIZE, slice_len);
+            }
+            return Ok(());
+        }
+        let total_size = molecule::NUMBER_SIZE + Self::ITEM_SIZE * item_count;
+        if slice_len != total_size {
+            return ve!(Self, TotalSizeNotMatch, total_size, slice_len);
+        }
+        Ok(())
+    }
+}
+#[derive(Debug, Default)]
+pub struct BytesBuilder(pub(crate) Vec<Byte>);
+impl BytesBuilder {
+    pub const ITEM_SIZE: usize = 1;
+    pub fn set(mut self, v: Vec<Byte>) -> Self {
+        self.0 = v;
+        self
+    }
+    pub fn push(mut self, v: Byte) -> Self {
+        self.0.push(v);
+        self
+    }
+    pub fn extend<T: ::core::iter::IntoIterator<Item = Byte>>(mut self, iter: T) -> Self {
+        for elem in iter {
+            self.0.push(elem);
+        }
+        self
+    }
+}
+impl molecule::prelude::Builder for BytesBuilder {
+    type Entity = Bytes;
+    const NAME: &'static str = "BytesBuilder";
+    fn expected_length(&self) -> usize {
+        molecule::NUMBER_SIZE + Self::ITEM_SIZE * self.0.len()
+    }
+    fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
+        writer.write_all(&molecule::pack_number(self.0.len() as molecule::Number))?;
+        for inner in &self.0[..] {
+            writer.write_all(inner.as_slice())?;
+        }
+        Ok(())
+    }
+    fn build(&self) -> Self::Entity {
+        let mut inner = Vec::with_capacity(self.expected_length());
+        self.write(&mut inner)
+            .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
+        Bytes::new_unchecked(inner.into())
+    }
+}
+pub struct BytesIterator(Bytes, usize, usize);
+impl ::core::iter::Iterator for BytesIterator {
+    type Item = Byte;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.1 >= self.2 {
+            None
+        } else {
+            let ret = self.0.get_unchecked(self.1);
+            self.1 += 1;
+            Some(ret)
+        }
+    }
+}
+impl ::core::iter::ExactSizeIterator for BytesIterator {
+    fn len(&self) -> usize {
+        self.2 - self.1
+    }
+}
+impl ::core::iter::IntoIterator for Bytes {
+    type Item = Byte;
+    type IntoIter = BytesIterator;
+    fn into_iter(self) -> Self::IntoIter {
+        let len = self.len();
+        BytesIterator(self, 0, len)
+    }
+}
+#[derive(Clone)]
+pub struct CKBHistoryTxProof(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for CKBHistoryTxProof {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl ::core::fmt::Debug for CKBHistoryTxProof {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl ::core::fmt::Display for CKBHistoryTxProof {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
-        write!(f, "{}: {}", "tx_merkle_index", self.tx_merkle_index())?;
-        write!(f, ", {}: {}", "block_number", self.block_number())?;
-        write!(f, ", {}: {}", "block_hash", self.block_hash())?;
-        write!(f, ", {}: {}", "tx_hash", self.tx_hash())?;
+        write!(f, "{}: {}", "block_number", self.block_number())?;
+        write!(f, ", {}: {}", "tx_merkle_index", self.tx_merkle_index())?;
         write!(f, ", {}: {}", "witnesses_root", self.witnesses_root())?;
         write!(f, ", {}: {}", "lemmas", self.lemmas())?;
+        write!(f, ", {}: {}", "raw_transaction", self.raw_transaction())?;
         let extra_count = self.count_extra_fields();
         if extra_count != 0 {
             write!(f, ", .. ({} fields)", extra_count)?;
@@ -703,8 +802,18 @@ impl<'r> ::core::fmt::Display for CkbTxProofReader<'r> {
         write!(f, " }}")
     }
 }
-impl<'r> CkbTxProofReader<'r> {
-    pub const FIELD_COUNT: usize = 6;
+impl ::core::default::Default for CKBHistoryTxProof {
+    fn default() -> Self {
+        let v: Vec<u8> = vec![
+            74, 0, 0, 0, 24, 0, 0, 0, 32, 0, 0, 0, 34, 0, 0, 0, 66, 0, 0, 0, 70, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        ];
+        CKBHistoryTxProof::new_unchecked(v.into())
+    }
+}
+impl CKBHistoryTxProof {
+    pub const FIELD_COUNT: usize = 5;
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
     }
@@ -721,55 +830,166 @@ impl<'r> CkbTxProofReader<'r> {
     pub fn has_extra_fields(&self) -> bool {
         Self::FIELD_COUNT != self.field_count()
     }
-    pub fn tx_merkle_index(&self) -> Uint16Reader<'r> {
+    pub fn block_number(&self) -> Uint64 {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[4..]) as usize;
         let end = molecule::unpack_number(&slice[8..]) as usize;
-        Uint16Reader::new_unchecked(&self.as_slice()[start..end])
+        Uint64::new_unchecked(self.0.slice(start..end))
     }
-    pub fn block_number(&self) -> Uint64Reader<'r> {
+    pub fn tx_merkle_index(&self) -> Uint16 {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[8..]) as usize;
         let end = molecule::unpack_number(&slice[12..]) as usize;
+        Uint16::new_unchecked(self.0.slice(start..end))
+    }
+    pub fn witnesses_root(&self) -> Byte32 {
+        let slice = self.as_slice();
+        let start = molecule::unpack_number(&slice[12..]) as usize;
+        let end = molecule::unpack_number(&slice[16..]) as usize;
+        Byte32::new_unchecked(self.0.slice(start..end))
+    }
+    pub fn lemmas(&self) -> Byte32Vec {
+        let slice = self.as_slice();
+        let start = molecule::unpack_number(&slice[16..]) as usize;
+        let end = molecule::unpack_number(&slice[20..]) as usize;
+        Byte32Vec::new_unchecked(self.0.slice(start..end))
+    }
+    pub fn raw_transaction(&self) -> Bytes {
+        let slice = self.as_slice();
+        let start = molecule::unpack_number(&slice[20..]) as usize;
+        if self.has_extra_fields() {
+            let end = molecule::unpack_number(&slice[24..]) as usize;
+            Bytes::new_unchecked(self.0.slice(start..end))
+        } else {
+            Bytes::new_unchecked(self.0.slice(start..))
+        }
+    }
+    pub fn as_reader<'r>(&'r self) -> CKBHistoryTxProofReader<'r> {
+        CKBHistoryTxProofReader::new_unchecked(self.as_slice())
+    }
+}
+impl molecule::prelude::Entity for CKBHistoryTxProof {
+    type Builder = CKBHistoryTxProofBuilder;
+    const NAME: &'static str = "CKBHistoryTxProof";
+    fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
+        CKBHistoryTxProof(data)
+    }
+    fn as_bytes(&self) -> molecule::bytes::Bytes {
+        self.0.clone()
+    }
+    fn as_slice(&self) -> &[u8] {
+        &self.0[..]
+    }
+    fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        CKBHistoryTxProofReader::from_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        CKBHistoryTxProofReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn new_builder() -> Self::Builder {
+        ::core::default::Default::default()
+    }
+    fn as_builder(self) -> Self::Builder {
+        Self::new_builder()
+            .block_number(self.block_number())
+            .tx_merkle_index(self.tx_merkle_index())
+            .witnesses_root(self.witnesses_root())
+            .lemmas(self.lemmas())
+            .raw_transaction(self.raw_transaction())
+    }
+}
+#[derive(Clone, Copy)]
+pub struct CKBHistoryTxProofReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for CKBHistoryTxProofReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl<'r> ::core::fmt::Debug for CKBHistoryTxProofReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl<'r> ::core::fmt::Display for CKBHistoryTxProofReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{} {{ ", Self::NAME)?;
+        write!(f, "{}: {}", "block_number", self.block_number())?;
+        write!(f, ", {}: {}", "tx_merkle_index", self.tx_merkle_index())?;
+        write!(f, ", {}: {}", "witnesses_root", self.witnesses_root())?;
+        write!(f, ", {}: {}", "lemmas", self.lemmas())?;
+        write!(f, ", {}: {}", "raw_transaction", self.raw_transaction())?;
+        let extra_count = self.count_extra_fields();
+        if extra_count != 0 {
+            write!(f, ", .. ({} fields)", extra_count)?;
+        }
+        write!(f, " }}")
+    }
+}
+impl<'r> CKBHistoryTxProofReader<'r> {
+    pub const FIELD_COUNT: usize = 5;
+    pub fn total_size(&self) -> usize {
+        molecule::unpack_number(self.as_slice()) as usize
+    }
+    pub fn field_count(&self) -> usize {
+        if self.total_size() == molecule::NUMBER_SIZE {
+            0
+        } else {
+            (molecule::unpack_number(&self.as_slice()[molecule::NUMBER_SIZE..]) as usize / 4) - 1
+        }
+    }
+    pub fn count_extra_fields(&self) -> usize {
+        self.field_count() - Self::FIELD_COUNT
+    }
+    pub fn has_extra_fields(&self) -> bool {
+        Self::FIELD_COUNT != self.field_count()
+    }
+    pub fn block_number(&self) -> Uint64Reader<'r> {
+        let slice = self.as_slice();
+        let start = molecule::unpack_number(&slice[4..]) as usize;
+        let end = molecule::unpack_number(&slice[8..]) as usize;
         Uint64Reader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn block_hash(&self) -> Byte32Reader<'r> {
+    pub fn tx_merkle_index(&self) -> Uint16Reader<'r> {
+        let slice = self.as_slice();
+        let start = molecule::unpack_number(&slice[8..]) as usize;
+        let end = molecule::unpack_number(&slice[12..]) as usize;
+        Uint16Reader::new_unchecked(&self.as_slice()[start..end])
+    }
+    pub fn witnesses_root(&self) -> Byte32Reader<'r> {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[12..]) as usize;
         let end = molecule::unpack_number(&slice[16..]) as usize;
         Byte32Reader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn tx_hash(&self) -> Byte32Reader<'r> {
+    pub fn lemmas(&self) -> Byte32VecReader<'r> {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[16..]) as usize;
         let end = molecule::unpack_number(&slice[20..]) as usize;
-        Byte32Reader::new_unchecked(&self.as_slice()[start..end])
+        Byte32VecReader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn witnesses_root(&self) -> Byte32Reader<'r> {
+    pub fn raw_transaction(&self) -> BytesReader<'r> {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[20..]) as usize;
-        let end = molecule::unpack_number(&slice[24..]) as usize;
-        Byte32Reader::new_unchecked(&self.as_slice()[start..end])
-    }
-    pub fn lemmas(&self) -> Byte32VecReader<'r> {
-        let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[24..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&slice[28..]) as usize;
-            Byte32VecReader::new_unchecked(&self.as_slice()[start..end])
+            let end = molecule::unpack_number(&slice[24..]) as usize;
+            BytesReader::new_unchecked(&self.as_slice()[start..end])
         } else {
-            Byte32VecReader::new_unchecked(&self.as_slice()[start..])
+            BytesReader::new_unchecked(&self.as_slice()[start..])
         }
     }
 }
-impl<'r> molecule::prelude::Reader<'r> for CkbTxProofReader<'r> {
-    type Entity = CkbTxProof;
-    const NAME: &'static str = "CkbTxProofReader";
+impl<'r> molecule::prelude::Reader<'r> for CKBHistoryTxProofReader<'r> {
+    type Entity = CKBHistoryTxProof;
+    const NAME: &'static str = "CKBHistoryTxProofReader";
     fn to_entity(&self) -> Self::Entity {
         Self::Entity::new_unchecked(self.as_slice().to_owned().into())
     }
     fn new_unchecked(slice: &'r [u8]) -> Self {
-        CkbTxProofReader(slice)
+        CKBHistoryTxProofReader(slice)
     }
     fn as_slice(&self) -> &'r [u8] {
         self.0
@@ -811,40 +1031,30 @@ impl<'r> molecule::prelude::Reader<'r> for CkbTxProofReader<'r> {
         if offsets.windows(2).any(|i| i[0] > i[1]) {
             return ve!(Self, OffsetsNotMatch);
         }
-        Uint16Reader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
-        Uint64Reader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
+        Uint64Reader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
+        Uint16Reader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
         Byte32Reader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
-        Byte32Reader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
-        Byte32Reader::verify(&slice[offsets[4]..offsets[5]], compatible)?;
-        Byte32VecReader::verify(&slice[offsets[5]..offsets[6]], compatible)?;
+        Byte32VecReader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
+        BytesReader::verify(&slice[offsets[4]..offsets[5]], compatible)?;
         Ok(())
     }
 }
 #[derive(Debug, Default)]
-pub struct CkbTxProofBuilder {
-    pub(crate) tx_merkle_index: Uint16,
+pub struct CKBHistoryTxProofBuilder {
     pub(crate) block_number: Uint64,
-    pub(crate) block_hash: Byte32,
-    pub(crate) tx_hash: Byte32,
+    pub(crate) tx_merkle_index: Uint16,
     pub(crate) witnesses_root: Byte32,
     pub(crate) lemmas: Byte32Vec,
+    pub(crate) raw_transaction: Bytes,
 }
-impl CkbTxProofBuilder {
-    pub const FIELD_COUNT: usize = 6;
-    pub fn tx_merkle_index(mut self, v: Uint16) -> Self {
-        self.tx_merkle_index = v;
-        self
-    }
+impl CKBHistoryTxProofBuilder {
+    pub const FIELD_COUNT: usize = 5;
     pub fn block_number(mut self, v: Uint64) -> Self {
         self.block_number = v;
         self
     }
-    pub fn block_hash(mut self, v: Byte32) -> Self {
-        self.block_hash = v;
-        self
-    }
-    pub fn tx_hash(mut self, v: Byte32) -> Self {
-        self.tx_hash = v;
+    pub fn tx_merkle_index(mut self, v: Uint16) -> Self {
+        self.tx_merkle_index = v;
         self
     }
     pub fn witnesses_root(mut self, v: Byte32) -> Self {
@@ -855,56 +1065,56 @@ impl CkbTxProofBuilder {
         self.lemmas = v;
         self
     }
+    pub fn raw_transaction(mut self, v: Bytes) -> Self {
+        self.raw_transaction = v;
+        self
+    }
 }
-impl molecule::prelude::Builder for CkbTxProofBuilder {
-    type Entity = CkbTxProof;
-    const NAME: &'static str = "CkbTxProofBuilder";
+impl molecule::prelude::Builder for CKBHistoryTxProofBuilder {
+    type Entity = CKBHistoryTxProof;
+    const NAME: &'static str = "CKBHistoryTxProofBuilder";
     fn expected_length(&self) -> usize {
         molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1)
-            + self.tx_merkle_index.as_slice().len()
             + self.block_number.as_slice().len()
-            + self.block_hash.as_slice().len()
-            + self.tx_hash.as_slice().len()
+            + self.tx_merkle_index.as_slice().len()
             + self.witnesses_root.as_slice().len()
             + self.lemmas.as_slice().len()
+            + self.raw_transaction.as_slice().len()
     }
     fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
         let mut total_size = molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1);
         let mut offsets = Vec::with_capacity(Self::FIELD_COUNT);
         offsets.push(total_size);
-        total_size += self.tx_merkle_index.as_slice().len();
-        offsets.push(total_size);
         total_size += self.block_number.as_slice().len();
         offsets.push(total_size);
-        total_size += self.block_hash.as_slice().len();
-        offsets.push(total_size);
-        total_size += self.tx_hash.as_slice().len();
+        total_size += self.tx_merkle_index.as_slice().len();
         offsets.push(total_size);
         total_size += self.witnesses_root.as_slice().len();
         offsets.push(total_size);
         total_size += self.lemmas.as_slice().len();
+        offsets.push(total_size);
+        total_size += self.raw_transaction.as_slice().len();
         writer.write_all(&molecule::pack_number(total_size as molecule::Number))?;
         for offset in offsets.into_iter() {
             writer.write_all(&molecule::pack_number(offset as molecule::Number))?;
         }
-        writer.write_all(self.tx_merkle_index.as_slice())?;
         writer.write_all(self.block_number.as_slice())?;
-        writer.write_all(self.block_hash.as_slice())?;
-        writer.write_all(self.tx_hash.as_slice())?;
+        writer.write_all(self.tx_merkle_index.as_slice())?;
         writer.write_all(self.witnesses_root.as_slice())?;
         writer.write_all(self.lemmas.as_slice())?;
+        writer.write_all(self.raw_transaction.as_slice())?;
         Ok(())
     }
     fn build(&self) -> Self::Entity {
         let mut inner = Vec::with_capacity(self.expected_length());
         self.write(&mut inner)
             .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
-        CkbTxProof::new_unchecked(inner.into())
+        CKBHistoryTxProof::new_unchecked(inner.into())
     }
 }
 #[derive(Clone)]
-pub struct CkbHistoryTxRootProof(molecule::bytes::Bytes);
-impl ::core::fmt::LowerHex for CkbHistoryTxRootProof {
+pub struct CKBHistoryTxRootProof(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for CKBHistoryTxRootProof {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
         if f.alternate() {
@@ -913,12 +1123,12 @@ impl ::core::fmt::LowerHex for CkbHistoryTxRootProof {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-impl ::core::fmt::Debug for CkbHistoryTxRootProof {
+impl ::core::fmt::Debug for CKBHistoryTxRootProof {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-impl ::core::fmt::Display for CkbHistoryTxRootProof {
+impl ::core::fmt::Display for CKBHistoryTxRootProof {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "init_block_number", self.init_block_number())?;
@@ -938,16 +1148,16 @@ impl ::core::fmt::Display for CkbHistoryTxRootProof {
         write!(f, " }}")
     }
 }
-impl ::core::default::Default for CkbHistoryTxRootProof {
+impl ::core::default::Default for CKBHistoryTxRootProof {
     fn default() -> Self {
         let v: Vec<u8> = vec![
             52, 0, 0, 0, 24, 0, 0, 0, 32, 0, 0, 0, 40, 0, 0, 0, 44, 0, 0, 0, 48, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         ];
-        CkbHistoryTxRootProof::new_unchecked(v.into())
+        CKBHistoryTxRootProof::new_unchecked(v.into())
     }
 }
-impl CkbHistoryTxRootProof {
+impl CKBHistoryTxRootProof {
     pub const FIELD_COUNT: usize = 5;
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
@@ -977,11 +1187,11 @@ impl CkbHistoryTxRootProof {
         let end = molecule::unpack_number(&slice[12..]) as usize;
         Uint64::new_unchecked(self.0.slice(start..end))
     }
-    pub fn indices(&self) -> Uint16Vec {
+    pub fn indices(&self) -> Uint64Vec {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[12..]) as usize;
         let end = molecule::unpack_number(&slice[16..]) as usize;
-        Uint16Vec::new_unchecked(self.0.slice(start..end))
+        Uint64Vec::new_unchecked(self.0.slice(start..end))
     }
     pub fn proof_leaves(&self) -> Byte32Vec {
         let slice = self.as_slice();
@@ -999,15 +1209,15 @@ impl CkbHistoryTxRootProof {
             Byte32Vec::new_unchecked(self.0.slice(start..))
         }
     }
-    pub fn as_reader<'r>(&'r self) -> CkbHistoryTxRootProofReader<'r> {
-        CkbHistoryTxRootProofReader::new_unchecked(self.as_slice())
+    pub fn as_reader<'r>(&'r self) -> CKBHistoryTxRootProofReader<'r> {
+        CKBHistoryTxRootProofReader::new_unchecked(self.as_slice())
     }
 }
-impl molecule::prelude::Entity for CkbHistoryTxRootProof {
-    type Builder = CkbHistoryTxRootProofBuilder;
-    const NAME: &'static str = "CkbHistoryTxRootProof";
+impl molecule::prelude::Entity for CKBHistoryTxRootProof {
+    type Builder = CKBHistoryTxRootProofBuilder;
+    const NAME: &'static str = "CKBHistoryTxRootProof";
     fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
-        CkbHistoryTxRootProof(data)
+        CKBHistoryTxRootProof(data)
     }
     fn as_bytes(&self) -> molecule::bytes::Bytes {
         self.0.clone()
@@ -1016,10 +1226,10 @@ impl molecule::prelude::Entity for CkbHistoryTxRootProof {
         &self.0[..]
     }
     fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
-        CkbHistoryTxRootProofReader::from_slice(slice).map(|reader| reader.to_entity())
+        CKBHistoryTxRootProofReader::from_slice(slice).map(|reader| reader.to_entity())
     }
     fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
-        CkbHistoryTxRootProofReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+        CKBHistoryTxRootProofReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
     }
     fn new_builder() -> Self::Builder {
         ::core::default::Default::default()
@@ -1034,8 +1244,8 @@ impl molecule::prelude::Entity for CkbHistoryTxRootProof {
     }
 }
 #[derive(Clone, Copy)]
-pub struct CkbHistoryTxRootProofReader<'r>(&'r [u8]);
-impl<'r> ::core::fmt::LowerHex for CkbHistoryTxRootProofReader<'r> {
+pub struct CKBHistoryTxRootProofReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for CKBHistoryTxRootProofReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
         if f.alternate() {
@@ -1044,12 +1254,12 @@ impl<'r> ::core::fmt::LowerHex for CkbHistoryTxRootProofReader<'r> {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-impl<'r> ::core::fmt::Debug for CkbHistoryTxRootProofReader<'r> {
+impl<'r> ::core::fmt::Debug for CKBHistoryTxRootProofReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-impl<'r> ::core::fmt::Display for CkbHistoryTxRootProofReader<'r> {
+impl<'r> ::core::fmt::Display for CKBHistoryTxRootProofReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "init_block_number", self.init_block_number())?;
@@ -1069,7 +1279,7 @@ impl<'r> ::core::fmt::Display for CkbHistoryTxRootProofReader<'r> {
         write!(f, " }}")
     }
 }
-impl<'r> CkbHistoryTxRootProofReader<'r> {
+impl<'r> CKBHistoryTxRootProofReader<'r> {
     pub const FIELD_COUNT: usize = 5;
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
@@ -1099,11 +1309,11 @@ impl<'r> CkbHistoryTxRootProofReader<'r> {
         let end = molecule::unpack_number(&slice[12..]) as usize;
         Uint64Reader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn indices(&self) -> Uint16VecReader<'r> {
+    pub fn indices(&self) -> Uint64VecReader<'r> {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[12..]) as usize;
         let end = molecule::unpack_number(&slice[16..]) as usize;
-        Uint16VecReader::new_unchecked(&self.as_slice()[start..end])
+        Uint64VecReader::new_unchecked(&self.as_slice()[start..end])
     }
     pub fn proof_leaves(&self) -> Byte32VecReader<'r> {
         let slice = self.as_slice();
@@ -1122,14 +1332,14 @@ impl<'r> CkbHistoryTxRootProofReader<'r> {
         }
     }
 }
-impl<'r> molecule::prelude::Reader<'r> for CkbHistoryTxRootProofReader<'r> {
-    type Entity = CkbHistoryTxRootProof;
-    const NAME: &'static str = "CkbHistoryTxRootProofReader";
+impl<'r> molecule::prelude::Reader<'r> for CKBHistoryTxRootProofReader<'r> {
+    type Entity = CKBHistoryTxRootProof;
+    const NAME: &'static str = "CKBHistoryTxRootProofReader";
     fn to_entity(&self) -> Self::Entity {
         Self::Entity::new_unchecked(self.as_slice().to_owned().into())
     }
     fn new_unchecked(slice: &'r [u8]) -> Self {
-        CkbHistoryTxRootProofReader(slice)
+        CKBHistoryTxRootProofReader(slice)
     }
     fn as_slice(&self) -> &'r [u8] {
         self.0
@@ -1173,21 +1383,21 @@ impl<'r> molecule::prelude::Reader<'r> for CkbHistoryTxRootProofReader<'r> {
         }
         Uint64Reader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
         Uint64Reader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
-        Uint16VecReader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
+        Uint64VecReader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
         Byte32VecReader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
         Byte32VecReader::verify(&slice[offsets[4]..offsets[5]], compatible)?;
         Ok(())
     }
 }
 #[derive(Debug, Default)]
-pub struct CkbHistoryTxRootProofBuilder {
+pub struct CKBHistoryTxRootProofBuilder {
     pub(crate) init_block_number: Uint64,
     pub(crate) latest_block_number: Uint64,
-    pub(crate) indices: Uint16Vec,
+    pub(crate) indices: Uint64Vec,
     pub(crate) proof_leaves: Byte32Vec,
     pub(crate) lemmas: Byte32Vec,
 }
-impl CkbHistoryTxRootProofBuilder {
+impl CKBHistoryTxRootProofBuilder {
     pub const FIELD_COUNT: usize = 5;
     pub fn init_block_number(mut self, v: Uint64) -> Self {
         self.init_block_number = v;
@@ -1197,7 +1407,7 @@ impl CkbHistoryTxRootProofBuilder {
         self.latest_block_number = v;
         self
     }
-    pub fn indices(mut self, v: Uint16Vec) -> Self {
+    pub fn indices(mut self, v: Uint64Vec) -> Self {
         self.indices = v;
         self
     }
@@ -1210,9 +1420,9 @@ impl CkbHistoryTxRootProofBuilder {
         self
     }
 }
-impl molecule::prelude::Builder for CkbHistoryTxRootProofBuilder {
-    type Entity = CkbHistoryTxRootProof;
-    const NAME: &'static str = "CkbHistoryTxRootProofBuilder";
+impl molecule::prelude::Builder for CKBHistoryTxRootProofBuilder {
+    type Entity = CKBHistoryTxRootProof;
+    const NAME: &'static str = "CKBHistoryTxRootProofBuilder";
     fn expected_length(&self) -> usize {
         molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1)
             + self.init_block_number.as_slice().len()
@@ -1249,6 +1459,623 @@ impl molecule::prelude::Builder for CkbHistoryTxRootProofBuilder {
         let mut inner = Vec::with_capacity(self.expected_length());
         self.write(&mut inner)
             .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
-        CkbHistoryTxRootProof::new_unchecked(inner.into())
+        CKBHistoryTxRootProof::new_unchecked(inner.into())
+    }
+}
+#[derive(Clone)]
+pub struct CKBHistoryTxProofVec(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for CKBHistoryTxProofVec {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl ::core::fmt::Debug for CKBHistoryTxProofVec {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl ::core::fmt::Display for CKBHistoryTxProofVec {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{} [", Self::NAME)?;
+        for i in 0..self.len() {
+            if i == 0 {
+                write!(f, "{}", self.get_unchecked(i))?;
+            } else {
+                write!(f, ", {}", self.get_unchecked(i))?;
+            }
+        }
+        write!(f, "]")
+    }
+}
+impl ::core::default::Default for CKBHistoryTxProofVec {
+    fn default() -> Self {
+        let v: Vec<u8> = vec![4, 0, 0, 0];
+        CKBHistoryTxProofVec::new_unchecked(v.into())
+    }
+}
+impl CKBHistoryTxProofVec {
+    pub fn total_size(&self) -> usize {
+        molecule::unpack_number(self.as_slice()) as usize
+    }
+    pub fn item_count(&self) -> usize {
+        if self.total_size() == molecule::NUMBER_SIZE {
+            0
+        } else {
+            (molecule::unpack_number(&self.as_slice()[molecule::NUMBER_SIZE..]) as usize / 4) - 1
+        }
+    }
+    pub fn len(&self) -> usize {
+        self.item_count()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+    pub fn get(&self, idx: usize) -> Option<CKBHistoryTxProof> {
+        if idx >= self.len() {
+            None
+        } else {
+            Some(self.get_unchecked(idx))
+        }
+    }
+    pub fn get_unchecked(&self, idx: usize) -> CKBHistoryTxProof {
+        let slice = self.as_slice();
+        let start_idx = molecule::NUMBER_SIZE * (1 + idx);
+        let start = molecule::unpack_number(&slice[start_idx..]) as usize;
+        if idx == self.len() - 1 {
+            CKBHistoryTxProof::new_unchecked(self.0.slice(start..))
+        } else {
+            let end_idx = start_idx + molecule::NUMBER_SIZE;
+            let end = molecule::unpack_number(&slice[end_idx..]) as usize;
+            CKBHistoryTxProof::new_unchecked(self.0.slice(start..end))
+        }
+    }
+    pub fn as_reader<'r>(&'r self) -> CKBHistoryTxProofVecReader<'r> {
+        CKBHistoryTxProofVecReader::new_unchecked(self.as_slice())
+    }
+}
+impl molecule::prelude::Entity for CKBHistoryTxProofVec {
+    type Builder = CKBHistoryTxProofVecBuilder;
+    const NAME: &'static str = "CKBHistoryTxProofVec";
+    fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
+        CKBHistoryTxProofVec(data)
+    }
+    fn as_bytes(&self) -> molecule::bytes::Bytes {
+        self.0.clone()
+    }
+    fn as_slice(&self) -> &[u8] {
+        &self.0[..]
+    }
+    fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        CKBHistoryTxProofVecReader::from_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        CKBHistoryTxProofVecReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn new_builder() -> Self::Builder {
+        ::core::default::Default::default()
+    }
+    fn as_builder(self) -> Self::Builder {
+        Self::new_builder().extend(self.into_iter())
+    }
+}
+#[derive(Clone, Copy)]
+pub struct CKBHistoryTxProofVecReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for CKBHistoryTxProofVecReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl<'r> ::core::fmt::Debug for CKBHistoryTxProofVecReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl<'r> ::core::fmt::Display for CKBHistoryTxProofVecReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{} [", Self::NAME)?;
+        for i in 0..self.len() {
+            if i == 0 {
+                write!(f, "{}", self.get_unchecked(i))?;
+            } else {
+                write!(f, ", {}", self.get_unchecked(i))?;
+            }
+        }
+        write!(f, "]")
+    }
+}
+impl<'r> CKBHistoryTxProofVecReader<'r> {
+    pub fn total_size(&self) -> usize {
+        molecule::unpack_number(self.as_slice()) as usize
+    }
+    pub fn item_count(&self) -> usize {
+        if self.total_size() == molecule::NUMBER_SIZE {
+            0
+        } else {
+            (molecule::unpack_number(&self.as_slice()[molecule::NUMBER_SIZE..]) as usize / 4) - 1
+        }
+    }
+    pub fn len(&self) -> usize {
+        self.item_count()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+    pub fn get(&self, idx: usize) -> Option<CKBHistoryTxProofReader<'r>> {
+        if idx >= self.len() {
+            None
+        } else {
+            Some(self.get_unchecked(idx))
+        }
+    }
+    pub fn get_unchecked(&self, idx: usize) -> CKBHistoryTxProofReader<'r> {
+        let slice = self.as_slice();
+        let start_idx = molecule::NUMBER_SIZE * (1 + idx);
+        let start = molecule::unpack_number(&slice[start_idx..]) as usize;
+        if idx == self.len() - 1 {
+            CKBHistoryTxProofReader::new_unchecked(&self.as_slice()[start..])
+        } else {
+            let end_idx = start_idx + molecule::NUMBER_SIZE;
+            let end = molecule::unpack_number(&slice[end_idx..]) as usize;
+            CKBHistoryTxProofReader::new_unchecked(&self.as_slice()[start..end])
+        }
+    }
+}
+impl<'r> molecule::prelude::Reader<'r> for CKBHistoryTxProofVecReader<'r> {
+    type Entity = CKBHistoryTxProofVec;
+    const NAME: &'static str = "CKBHistoryTxProofVecReader";
+    fn to_entity(&self) -> Self::Entity {
+        Self::Entity::new_unchecked(self.as_slice().to_owned().into())
+    }
+    fn new_unchecked(slice: &'r [u8]) -> Self {
+        CKBHistoryTxProofVecReader(slice)
+    }
+    fn as_slice(&self) -> &'r [u8] {
+        self.0
+    }
+    fn verify(slice: &[u8], compatible: bool) -> molecule::error::VerificationResult<()> {
+        use molecule::verification_error as ve;
+        let slice_len = slice.len();
+        if slice_len < molecule::NUMBER_SIZE {
+            return ve!(Self, HeaderIsBroken, molecule::NUMBER_SIZE, slice_len);
+        }
+        let total_size = molecule::unpack_number(slice) as usize;
+        if slice_len != total_size {
+            return ve!(Self, TotalSizeNotMatch, total_size, slice_len);
+        }
+        if slice_len == molecule::NUMBER_SIZE {
+            return Ok(());
+        }
+        if slice_len < molecule::NUMBER_SIZE * 2 {
+            return ve!(
+                Self,
+                TotalSizeNotMatch,
+                molecule::NUMBER_SIZE * 2,
+                slice_len
+            );
+        }
+        let offset_first = molecule::unpack_number(&slice[molecule::NUMBER_SIZE..]) as usize;
+        if offset_first % molecule::NUMBER_SIZE != 0 || offset_first < molecule::NUMBER_SIZE * 2 {
+            return ve!(Self, OffsetsNotMatch);
+        }
+        if slice_len < offset_first {
+            return ve!(Self, HeaderIsBroken, offset_first, slice_len);
+        }
+        let mut offsets: Vec<usize> = slice[molecule::NUMBER_SIZE..offset_first]
+            .chunks_exact(molecule::NUMBER_SIZE)
+            .map(|x| molecule::unpack_number(x) as usize)
+            .collect();
+        offsets.push(total_size);
+        if offsets.windows(2).any(|i| i[0] > i[1]) {
+            return ve!(Self, OffsetsNotMatch);
+        }
+        for pair in offsets.windows(2) {
+            let start = pair[0];
+            let end = pair[1];
+            CKBHistoryTxProofReader::verify(&slice[start..end], compatible)?;
+        }
+        Ok(())
+    }
+}
+#[derive(Debug, Default)]
+pub struct CKBHistoryTxProofVecBuilder(pub(crate) Vec<CKBHistoryTxProof>);
+impl CKBHistoryTxProofVecBuilder {
+    pub fn set(mut self, v: Vec<CKBHistoryTxProof>) -> Self {
+        self.0 = v;
+        self
+    }
+    pub fn push(mut self, v: CKBHistoryTxProof) -> Self {
+        self.0.push(v);
+        self
+    }
+    pub fn extend<T: ::core::iter::IntoIterator<Item = CKBHistoryTxProof>>(
+        mut self,
+        iter: T,
+    ) -> Self {
+        for elem in iter {
+            self.0.push(elem);
+        }
+        self
+    }
+}
+impl molecule::prelude::Builder for CKBHistoryTxProofVecBuilder {
+    type Entity = CKBHistoryTxProofVec;
+    const NAME: &'static str = "CKBHistoryTxProofVecBuilder";
+    fn expected_length(&self) -> usize {
+        molecule::NUMBER_SIZE * (self.0.len() + 1)
+            + self
+                .0
+                .iter()
+                .map(|inner| inner.as_slice().len())
+                .sum::<usize>()
+    }
+    fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
+        let item_count = self.0.len();
+        if item_count == 0 {
+            writer.write_all(&molecule::pack_number(
+                molecule::NUMBER_SIZE as molecule::Number,
+            ))?;
+        } else {
+            let (total_size, offsets) = self.0.iter().fold(
+                (
+                    molecule::NUMBER_SIZE * (item_count + 1),
+                    Vec::with_capacity(item_count),
+                ),
+                |(start, mut offsets), inner| {
+                    offsets.push(start);
+                    (start + inner.as_slice().len(), offsets)
+                },
+            );
+            writer.write_all(&molecule::pack_number(total_size as molecule::Number))?;
+            for offset in offsets.into_iter() {
+                writer.write_all(&molecule::pack_number(offset as molecule::Number))?;
+            }
+            for inner in self.0.iter() {
+                writer.write_all(inner.as_slice())?;
+            }
+        }
+        Ok(())
+    }
+    fn build(&self) -> Self::Entity {
+        let mut inner = Vec::with_capacity(self.expected_length());
+        self.write(&mut inner)
+            .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
+        CKBHistoryTxProofVec::new_unchecked(inner.into())
+    }
+}
+pub struct CKBHistoryTxProofVecIterator(CKBHistoryTxProofVec, usize, usize);
+impl ::core::iter::Iterator for CKBHistoryTxProofVecIterator {
+    type Item = CKBHistoryTxProof;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.1 >= self.2 {
+            None
+        } else {
+            let ret = self.0.get_unchecked(self.1);
+            self.1 += 1;
+            Some(ret)
+        }
+    }
+}
+impl ::core::iter::ExactSizeIterator for CKBHistoryTxProofVecIterator {
+    fn len(&self) -> usize {
+        self.2 - self.1
+    }
+}
+impl ::core::iter::IntoIterator for CKBHistoryTxProofVec {
+    type Item = CKBHistoryTxProof;
+    type IntoIter = CKBHistoryTxProofVecIterator;
+    fn into_iter(self) -> Self::IntoIter {
+        let len = self.len();
+        CKBHistoryTxProofVecIterator(self, 0, len)
+    }
+}
+impl<'r> CKBHistoryTxProofVecReader<'r> {
+    pub fn iter<'t>(&'t self) -> CKBHistoryTxProofVecReaderIterator<'t, 'r> {
+        CKBHistoryTxProofVecReaderIterator(&self, 0, self.len())
+    }
+}
+pub struct CKBHistoryTxProofVecReaderIterator<'t, 'r>(
+    &'t CKBHistoryTxProofVecReader<'r>,
+    usize,
+    usize,
+);
+impl<'t: 'r, 'r> ::core::iter::Iterator for CKBHistoryTxProofVecReaderIterator<'t, 'r> {
+    type Item = CKBHistoryTxProofReader<'t>;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.1 >= self.2 {
+            None
+        } else {
+            let ret = self.0.get_unchecked(self.1);
+            self.1 += 1;
+            Some(ret)
+        }
+    }
+}
+impl<'t: 'r, 'r> ::core::iter::ExactSizeIterator for CKBHistoryTxProofVecReaderIterator<'t, 'r> {
+    fn len(&self) -> usize {
+        self.2 - self.1
+    }
+}
+#[derive(Clone)]
+pub struct CKBUnlockTokenParam(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for CKBUnlockTokenParam {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl ::core::fmt::Debug for CKBUnlockTokenParam {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl ::core::fmt::Display for CKBUnlockTokenParam {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{} {{ ", Self::NAME)?;
+        write!(
+            f,
+            "{}: {}",
+            "history_tx_root_proof",
+            self.history_tx_root_proof()
+        )?;
+        write!(f, ", {}: {}", "tx_proofs", self.tx_proofs())?;
+        let extra_count = self.count_extra_fields();
+        if extra_count != 0 {
+            write!(f, ", .. ({} fields)", extra_count)?;
+        }
+        write!(f, " }}")
+    }
+}
+impl ::core::default::Default for CKBUnlockTokenParam {
+    fn default() -> Self {
+        let v: Vec<u8> = vec![
+            68, 0, 0, 0, 12, 0, 0, 0, 64, 0, 0, 0, 52, 0, 0, 0, 24, 0, 0, 0, 32, 0, 0, 0, 40, 0, 0,
+            0, 44, 0, 0, 0, 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0,
+        ];
+        CKBUnlockTokenParam::new_unchecked(v.into())
+    }
+}
+impl CKBUnlockTokenParam {
+    pub const FIELD_COUNT: usize = 2;
+    pub fn total_size(&self) -> usize {
+        molecule::unpack_number(self.as_slice()) as usize
+    }
+    pub fn field_count(&self) -> usize {
+        if self.total_size() == molecule::NUMBER_SIZE {
+            0
+        } else {
+            (molecule::unpack_number(&self.as_slice()[molecule::NUMBER_SIZE..]) as usize / 4) - 1
+        }
+    }
+    pub fn count_extra_fields(&self) -> usize {
+        self.field_count() - Self::FIELD_COUNT
+    }
+    pub fn has_extra_fields(&self) -> bool {
+        Self::FIELD_COUNT != self.field_count()
+    }
+    pub fn history_tx_root_proof(&self) -> CKBHistoryTxRootProof {
+        let slice = self.as_slice();
+        let start = molecule::unpack_number(&slice[4..]) as usize;
+        let end = molecule::unpack_number(&slice[8..]) as usize;
+        CKBHistoryTxRootProof::new_unchecked(self.0.slice(start..end))
+    }
+    pub fn tx_proofs(&self) -> CKBHistoryTxProofVec {
+        let slice = self.as_slice();
+        let start = molecule::unpack_number(&slice[8..]) as usize;
+        if self.has_extra_fields() {
+            let end = molecule::unpack_number(&slice[12..]) as usize;
+            CKBHistoryTxProofVec::new_unchecked(self.0.slice(start..end))
+        } else {
+            CKBHistoryTxProofVec::new_unchecked(self.0.slice(start..))
+        }
+    }
+    pub fn as_reader<'r>(&'r self) -> CKBUnlockTokenParamReader<'r> {
+        CKBUnlockTokenParamReader::new_unchecked(self.as_slice())
+    }
+}
+impl molecule::prelude::Entity for CKBUnlockTokenParam {
+    type Builder = CKBUnlockTokenParamBuilder;
+    const NAME: &'static str = "CKBUnlockTokenParam";
+    fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
+        CKBUnlockTokenParam(data)
+    }
+    fn as_bytes(&self) -> molecule::bytes::Bytes {
+        self.0.clone()
+    }
+    fn as_slice(&self) -> &[u8] {
+        &self.0[..]
+    }
+    fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        CKBUnlockTokenParamReader::from_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        CKBUnlockTokenParamReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn new_builder() -> Self::Builder {
+        ::core::default::Default::default()
+    }
+    fn as_builder(self) -> Self::Builder {
+        Self::new_builder()
+            .history_tx_root_proof(self.history_tx_root_proof())
+            .tx_proofs(self.tx_proofs())
+    }
+}
+#[derive(Clone, Copy)]
+pub struct CKBUnlockTokenParamReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for CKBUnlockTokenParamReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl<'r> ::core::fmt::Debug for CKBUnlockTokenParamReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl<'r> ::core::fmt::Display for CKBUnlockTokenParamReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{} {{ ", Self::NAME)?;
+        write!(
+            f,
+            "{}: {}",
+            "history_tx_root_proof",
+            self.history_tx_root_proof()
+        )?;
+        write!(f, ", {}: {}", "tx_proofs", self.tx_proofs())?;
+        let extra_count = self.count_extra_fields();
+        if extra_count != 0 {
+            write!(f, ", .. ({} fields)", extra_count)?;
+        }
+        write!(f, " }}")
+    }
+}
+impl<'r> CKBUnlockTokenParamReader<'r> {
+    pub const FIELD_COUNT: usize = 2;
+    pub fn total_size(&self) -> usize {
+        molecule::unpack_number(self.as_slice()) as usize
+    }
+    pub fn field_count(&self) -> usize {
+        if self.total_size() == molecule::NUMBER_SIZE {
+            0
+        } else {
+            (molecule::unpack_number(&self.as_slice()[molecule::NUMBER_SIZE..]) as usize / 4) - 1
+        }
+    }
+    pub fn count_extra_fields(&self) -> usize {
+        self.field_count() - Self::FIELD_COUNT
+    }
+    pub fn has_extra_fields(&self) -> bool {
+        Self::FIELD_COUNT != self.field_count()
+    }
+    pub fn history_tx_root_proof(&self) -> CKBHistoryTxRootProofReader<'r> {
+        let slice = self.as_slice();
+        let start = molecule::unpack_number(&slice[4..]) as usize;
+        let end = molecule::unpack_number(&slice[8..]) as usize;
+        CKBHistoryTxRootProofReader::new_unchecked(&self.as_slice()[start..end])
+    }
+    pub fn tx_proofs(&self) -> CKBHistoryTxProofVecReader<'r> {
+        let slice = self.as_slice();
+        let start = molecule::unpack_number(&slice[8..]) as usize;
+        if self.has_extra_fields() {
+            let end = molecule::unpack_number(&slice[12..]) as usize;
+            CKBHistoryTxProofVecReader::new_unchecked(&self.as_slice()[start..end])
+        } else {
+            CKBHistoryTxProofVecReader::new_unchecked(&self.as_slice()[start..])
+        }
+    }
+}
+impl<'r> molecule::prelude::Reader<'r> for CKBUnlockTokenParamReader<'r> {
+    type Entity = CKBUnlockTokenParam;
+    const NAME: &'static str = "CKBUnlockTokenParamReader";
+    fn to_entity(&self) -> Self::Entity {
+        Self::Entity::new_unchecked(self.as_slice().to_owned().into())
+    }
+    fn new_unchecked(slice: &'r [u8]) -> Self {
+        CKBUnlockTokenParamReader(slice)
+    }
+    fn as_slice(&self) -> &'r [u8] {
+        self.0
+    }
+    fn verify(slice: &[u8], compatible: bool) -> molecule::error::VerificationResult<()> {
+        use molecule::verification_error as ve;
+        let slice_len = slice.len();
+        if slice_len < molecule::NUMBER_SIZE {
+            return ve!(Self, HeaderIsBroken, molecule::NUMBER_SIZE, slice_len);
+        }
+        let total_size = molecule::unpack_number(slice) as usize;
+        if slice_len != total_size {
+            return ve!(Self, TotalSizeNotMatch, total_size, slice_len);
+        }
+        if slice_len == molecule::NUMBER_SIZE && Self::FIELD_COUNT == 0 {
+            return Ok(());
+        }
+        if slice_len < molecule::NUMBER_SIZE * 2 {
+            return ve!(Self, HeaderIsBroken, molecule::NUMBER_SIZE * 2, slice_len);
+        }
+        let offset_first = molecule::unpack_number(&slice[molecule::NUMBER_SIZE..]) as usize;
+        if offset_first % molecule::NUMBER_SIZE != 0 || offset_first < molecule::NUMBER_SIZE * 2 {
+            return ve!(Self, OffsetsNotMatch);
+        }
+        if slice_len < offset_first {
+            return ve!(Self, HeaderIsBroken, offset_first, slice_len);
+        }
+        let field_count = offset_first / molecule::NUMBER_SIZE - 1;
+        if field_count < Self::FIELD_COUNT {
+            return ve!(Self, FieldCountNotMatch, Self::FIELD_COUNT, field_count);
+        } else if !compatible && field_count > Self::FIELD_COUNT {
+            return ve!(Self, FieldCountNotMatch, Self::FIELD_COUNT, field_count);
+        };
+        let mut offsets: Vec<usize> = slice[molecule::NUMBER_SIZE..offset_first]
+            .chunks_exact(molecule::NUMBER_SIZE)
+            .map(|x| molecule::unpack_number(x) as usize)
+            .collect();
+        offsets.push(total_size);
+        if offsets.windows(2).any(|i| i[0] > i[1]) {
+            return ve!(Self, OffsetsNotMatch);
+        }
+        CKBHistoryTxRootProofReader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
+        CKBHistoryTxProofVecReader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
+        Ok(())
+    }
+}
+#[derive(Debug, Default)]
+pub struct CKBUnlockTokenParamBuilder {
+    pub(crate) history_tx_root_proof: CKBHistoryTxRootProof,
+    pub(crate) tx_proofs: CKBHistoryTxProofVec,
+}
+impl CKBUnlockTokenParamBuilder {
+    pub const FIELD_COUNT: usize = 2;
+    pub fn history_tx_root_proof(mut self, v: CKBHistoryTxRootProof) -> Self {
+        self.history_tx_root_proof = v;
+        self
+    }
+    pub fn tx_proofs(mut self, v: CKBHistoryTxProofVec) -> Self {
+        self.tx_proofs = v;
+        self
+    }
+}
+impl molecule::prelude::Builder for CKBUnlockTokenParamBuilder {
+    type Entity = CKBUnlockTokenParam;
+    const NAME: &'static str = "CKBUnlockTokenParamBuilder";
+    fn expected_length(&self) -> usize {
+        molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1)
+            + self.history_tx_root_proof.as_slice().len()
+            + self.tx_proofs.as_slice().len()
+    }
+    fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
+        let mut total_size = molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1);
+        let mut offsets = Vec::with_capacity(Self::FIELD_COUNT);
+        offsets.push(total_size);
+        total_size += self.history_tx_root_proof.as_slice().len();
+        offsets.push(total_size);
+        total_size += self.tx_proofs.as_slice().len();
+        writer.write_all(&molecule::pack_number(total_size as molecule::Number))?;
+        for offset in offsets.into_iter() {
+            writer.write_all(&molecule::pack_number(offset as molecule::Number))?;
+        }
+        writer.write_all(self.history_tx_root_proof.as_slice())?;
+        writer.write_all(self.tx_proofs.as_slice())?;
+        Ok(())
+    }
+    fn build(&self) -> Self::Entity {
+        let mut inner = Vec::with_capacity(self.expected_length());
+        self.write(&mut inner)
+            .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
+        CKBUnlockTokenParam::new_unchecked(inner.into())
     }
 }

@@ -10,7 +10,7 @@ use merkle_cbt::{merkle_tree::Merge, MerkleProof as ExMerkleProof, MerkleProof, 
 use serde::{Deserialize, Serialize};
 
 use crate::types::transaction_proof::{
-    CkbHistoryTxRootProof, CkbTxProof, JsonMerkleProof, MergeByte32, TransactionProof,
+    CKBHistoryTxRootProof, CkbTxProof, JsonMerkleProof, MergeByte32, TransactionProof,
     MAINNET_RPC_URL,
 };
 use ckb_jsonrpc_types::Uint32;
@@ -170,7 +170,7 @@ pub fn generate_ckb_history_tx_root_proof(
     init_block_number: u64,
     latest_block_number: u64,
     block_numbers: Vec<u64>,
-) -> Result<CkbHistoryTxRootProof, String> {
+) -> Result<CKBHistoryTxRootProof, String> {
     let mut rpc_client = HttpRpcClient::new(MAINNET_RPC_URL.to_owned());
     let mut tx_roots_indices: Vec<u32> = vec![];
     let mut proof_leaves: Vec<H256> = vec![];
@@ -217,7 +217,7 @@ pub fn generate_ckb_history_tx_root_proof(
     indices.sort_by(|a, b| b.cmp(a));
     proof_leaves.reverse();
 
-    Ok(CkbHistoryTxRootProof {
+    Ok(CKBHistoryTxRootProof {
         init_block_number,
         latest_block_number,
         indices: indices.iter().map(|i| *i as u16).collect(),

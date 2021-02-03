@@ -1,4 +1,5 @@
 use ckb_types::{
+    bytes::Bytes,
     core::{self, cell::CellProvider, TransactionBuilder},
     h256,
     packed::{self, Block, Byte32, Byte32Vec, Header, HeaderVec, ProposalShortId},
@@ -41,12 +42,29 @@ pub struct CkbTxProof {
 
 // tx_merkle_index == index in transactions merkle tree of the block
 #[derive(Clone, Default, Serialize, Deserialize, PartialEq, Eq, Hash, Debug)]
-pub struct CkbHistoryTxRootProof {
+pub struct CKBHistoryTxProof {
+    pub block_number: u64,
+    pub tx_merkle_index: u16,
+    pub witnesses_root: H256,
+    pub lemmas: Vec<H256>,
+    pub raw_transaction: Bytes,
+}
+
+// tx_merkle_index == index in transactions merkle tree of the block
+#[derive(Clone, Default, Serialize, Deserialize, PartialEq, Eq, Hash, Debug)]
+pub struct CKBHistoryTxRootProof {
     pub init_block_number: u64,
     pub latest_block_number: u64,
-    pub indices: Vec<u16>,
+    pub indices: Vec<u64>,
     pub proof_leaves: Vec<H256>,
     pub lemmas: Vec<H256>,
+}
+
+// tx_merkle_index == index in transactions merkle tree of the block
+#[derive(Clone, Default, Serialize, Deserialize, PartialEq, Eq, Hash, Debug)]
+pub struct CKBUnlockTokenParam {
+    history_tx_root_proof: CKBHistoryTxRootProof,
+    tx_proofs: Vec<CKBHistoryTxProof>,
 }
 
 // CKBChain   CkbTxProof
@@ -86,9 +104,9 @@ impl From<CkbTxProof> for ckb_tx_proof::CkbTxProof {
 
 // CKBChain   CkbTxProof
 // TokenLocker  unlockToken( CkbTxProof, RawTransaction + funding_input_index + extra )
-impl From<CkbHistoryTxRootProof> for ckb_tx_proof::CkbHistoryTxRootProof {
-    fn from(json: CkbHistoryTxRootProof) -> Self {
-        let CkbHistoryTxRootProof {
+impl From<CKBHistoryTxRootProof> for ckb_tx_proof::CkbHistoryTxRootProof {
+    fn from(json: CKBHistoryTxRootProof) -> Self {
+        let CKBHistoryTxRootProof {
             init_block_number,
             latest_block_number,
             indices,

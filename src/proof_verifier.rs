@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::proof_generator::get_tx_index;
 use crate::types::transaction_proof::{
-    CkbHistoryTxRootProof, CkbTxProof, JsonMerkleProof, MergeByte32, TransactionProof,
+    CKBHistoryTxRootProof, CkbTxProof, JsonMerkleProof, MergeByte32, TransactionProof,
     MAINNET_RPC_URL,
 };
 use ckb_hash::new_blake2b;
@@ -147,7 +147,7 @@ pub fn verify_ckb_single_tx_proof(tx_proof: CkbTxProof) -> Result<H256, String> 
 }
 
 pub fn verify_ckb_history_tx_root_proof(
-    tx_roots_proof: CkbHistoryTxRootProof,
+    tx_roots_proof: CKBHistoryTxRootProof,
 ) -> Result<H256, String> {
     let mut rpc_client = HttpRpcClient::new(MAINNET_RPC_URL.to_owned());
     let mut all_tx_roots: Vec<H256> = vec![];

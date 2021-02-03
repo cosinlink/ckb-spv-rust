@@ -3,7 +3,7 @@ use crate::proof_generator::{generate_ckb_history_tx_root_proof, generate_ckb_si
 use crate::proof_verifier::{verify_ckb_history_tx_root_proof, verify_ckb_single_tx_proof};
 use crate::types::generated::ckb_tx_proof;
 use crate::types::transaction_proof::{
-    CkbHistoryTxRootProof, CkbTxProof, JsonMerkleProof, MergeByte32, MAINNET_RPC_URL,
+    CKBHistoryTxRootProof, CkbTxProof, JsonMerkleProof, MergeByte32, MAINNET_RPC_URL,
 };
 use ckb_jsonrpc_types::Uint32;
 use ckb_jsonrpc_types::{JsonBytes, ScriptHashType};
@@ -401,7 +401,7 @@ pub fn generate_tx_root_proof_test(test_data: &mut HistoryTxRootProofData) {
         // vec![93100u64, 93196, 97700],
     ];
 
-    let mut history_tx_root_proofs: Vec<CkbHistoryTxRootProof> = vec![];
+    let mut history_tx_root_proofs: Vec<CKBHistoryTxRootProof> = vec![];
     for numbers in block_numbers_vec {
         dbg!(numbers.clone());
         let history_tx_root_proof = generate_ckb_history_tx_root_proof(
