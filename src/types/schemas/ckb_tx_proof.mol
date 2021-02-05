@@ -2,6 +2,16 @@ import basic;
 vector Byte32Vec <Byte32>;
 vector Uint64Vec <Uint64>;
 vector Bytes <byte>;
+vector Uint16Vec <Uint16>;
+
+table CkbTxProof {
+    tx_merkle_index:        Uint16,
+    block_number:           Uint64,
+    block_hash:             Byte32,
+    tx_hash:                Byte32,
+    witnesses_root:         Byte32,
+    lemmas:                 Byte32Vec,
+}
 
 table CKBHistoryTxProof {
     block_number:               Uint64,

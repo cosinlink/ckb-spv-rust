@@ -63,12 +63,16 @@ pub struct CKBHistoryTxRootProof {
 // tx_merkle_index == index in transactions merkle tree of the block
 #[derive(Clone, Default, Serialize, Deserialize, PartialEq, Eq, Hash, Debug)]
 pub struct CKBUnlockTokenParam {
-    history_tx_root_proof: CKBHistoryTxRootProof,
-    tx_proofs: Vec<CKBHistoryTxProof>,
+    pub history_tx_root_proof: CKBHistoryTxRootProof,
+    pub tx_proofs: Vec<CKBHistoryTxProof>,
 }
 
-// CKBChain   CkbTxProof
-// TokenLocker  unlockToken( CkbTxProof, RawTransaction + funding_input_index + extra )
+impl From<packed::Bytes> for ckb_tx_proof::Bytes {
+    fn from(data: packed::Bytes) -> Self {
+        ckb_tx_proof::Bytes::from_slice(data.as_slice()).unwrap()
+    }
+}
+
 impl From<CkbTxProof> for ckb_tx_proof::CkbTxProof {
     fn from(json: CkbTxProof) -> Self {
         let CkbTxProof {
@@ -102,9 +106,40 @@ impl From<CkbTxProof> for ckb_tx_proof::CkbTxProof {
     }
 }
 
-// CKBChain   CkbTxProof
-// TokenLocker  unlockToken( CkbTxProof, RawTransaction + funding_input_index + extra )
-impl From<CKBHistoryTxRootProof> for ckb_tx_proof::CkbHistoryTxRootProof {
+impl From<CKBHistoryTxProof> for ckb_tx_proof::CKBHistoryTxProof {
+    fn from(json: CKBHistoryTxProof) -> Self {
+        let CKBHistoryTxProof {
+            block_number,
+            tx_merkle_index,
+            witnesses_root,
+            lemmas,
+            raw_transaction,
+        } = json;
+
+        let mol_lemmas_vec: Vec<basic::Byte32> = lemmas
+            .iter()
+            .map(|hash| hash.pack().into())
+            .collect::<Vec<_>>();
+
+        let mol_lemmas = ckb_tx_proof::Byte32Vec::new_builder()
+            .set(mol_lemmas_vec)
+            .build();
+
+        let mol_raw_tx: ckb_tx_proof::Bytes = raw_transaction.pack().into();
+
+        // basic to target
+        //  impl From<basic> for target
+        ckb_tx_proof::CKBHistoryTxProof::new_builder()
+            .tx_merkle_index(tx_merkle_index.into())
+            .block_number(block_number.into())
+            .witnesses_root(witnesses_root.pack().into())
+            .lemmas(mol_lemmas)
+            .raw_transaction(mol_raw_tx)
+            .build()
+    }
+}
+
+impl From<CKBHistoryTxRootProof> for ckb_tx_proof::CKBHistoryTxRootProof {
     fn from(json: CKBHistoryTxRootProof) -> Self {
         let CKBHistoryTxRootProof {
             init_block_number,
@@ -114,10 +149,10 @@ impl From<CKBHistoryTxRootProof> for ckb_tx_proof::CkbHistoryTxRootProof {
             lemmas,
         } = json;
 
-        let mol_indices_vec: Vec<basic::Uint16> =
+        let mol_indices_vec: Vec<basic::Uint64> =
             indices.iter().map(|i| (*i).into()).collect::<Vec<_>>();
 
-        let mol_indices = ckb_tx_proof::Uint16Vec::new_builder()
+        let mol_indices = ckb_tx_proof::Uint64Vec::new_builder()
             .set(mol_indices_vec)
             .build();
 
@@ -141,12 +176,37 @@ impl From<CKBHistoryTxRootProof> for ckb_tx_proof::CkbHistoryTxRootProof {
 
         // basic to target
         //  impl From<basic> for target
-        ckb_tx_proof::CkbHistoryTxRootProof::new_builder()
+        ckb_tx_proof::CKBHistoryTxRootProof::new_builder()
             .init_block_number(init_block_number.into())
             .latest_block_number(latest_block_number.into())
             .indices(mol_indices)
             .proof_leaves(mol_proof_leaves)
             .lemmas(mol_lemmas)
+            .build()
+    }
+}
+
+impl From<CKBUnlockTokenParam> for ckb_tx_proof::CKBUnlockTokenParam {
+    fn from(json: CKBUnlockTokenParam) -> Self {
+        let CKBUnlockTokenParam {
+            history_tx_root_proof,
+            tx_proofs,
+        } = json;
+
+        let mol_tx_proofs_vec: Vec<ckb_tx_proof::CKBHistoryTxProof> = tx_proofs
+            .iter()
+            .map(|tx_proof| tx_proof.clone().into())
+            .collect();
+
+        let mol_tx_proofs = ckb_tx_proof::CKBHistoryTxProofVec::new_builder()
+            .set(mol_tx_proofs_vec)
+            .build();
+
+        // basic to target
+        //  impl From<basic> for target
+        ckb_tx_proof::CKBUnlockTokenParam::new_builder()
+            .history_tx_root_proof(history_tx_root_proof.into())
+            .tx_proofs(mol_tx_proofs)
             .build()
     }
 }

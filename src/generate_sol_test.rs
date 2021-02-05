@@ -1,9 +1,10 @@
-use crate::proof_generator::get_tx_index;
 use crate::proof_generator::{generate_ckb_history_tx_root_proof, generate_ckb_single_tx_proof};
+use crate::proof_generator::{generate_history_tx_proof, get_tx_index};
 use crate::proof_verifier::{verify_ckb_history_tx_root_proof, verify_ckb_single_tx_proof};
 use crate::types::generated::ckb_tx_proof;
 use crate::types::transaction_proof::{
-    CKBHistoryTxRootProof, CkbTxProof, JsonMerkleProof, MergeByte32, MAINNET_RPC_URL,
+    CKBHistoryTxProof, CKBHistoryTxRootProof, CKBUnlockTokenParam, CkbTxProof, JsonMerkleProof,
+    MergeByte32, MAINNET_RPC_URL,
 };
 use ckb_jsonrpc_types::Uint32;
 use ckb_jsonrpc_types::{JsonBytes, ScriptHashType};
@@ -39,7 +40,9 @@ use std::{thread, time};
 const RPC_DATA_NAME: &str = "origin_data.json";
 const TEST_VIEWCKB_FILE_NAME: &str = "testVectors.json";
 const TEST_VIEWSPV_FILE_NAME: &str = "testSPV.json";
+const TEST_VIEW_HISTORY_TX_PROOF_FILE_NAME: &str = "testHistoryTxProof.json";
 const TEST_VIEW_HISTORY_TX_ROOT_FILE_NAME: &str = "testHistoryTxRoot.json";
+const TEST_VIEW_UNLOCK_TOKEN_PARAM: &str = "testUnlockTokenParam.json";
 const TEST_HEADERS_BENCH_FILE_NAME: &str = "testHeadersBench.json";
 const TEST_FUZZY_TEST_FILE_NAME: &str = "testEaglesongFuzzy.json";
 const TEST_DATA_DIR: &str = "test-data";
@@ -136,6 +139,18 @@ pub struct SpvRpcData {
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
+pub struct HistoryTxProofData {
+    // members of CKBHistoryTxProof
+    extract_block_number: Vec<TestCase<String, String>>,
+    extract_tx_merkle_index: Vec<TestCase<String, String>>,
+    extract_witnesses_root: Vec<TestCase<String, H256>>,
+    extract_lemmas: Vec<TestCase<String, String>>,
+    extract_raw_transaction: Vec<TestCase<String, String>>,
+    calc_tx_hash: Vec<TestCase<String, H256>>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct HistoryTxRootProofData {
     // members of HistoryTxRootProof
     extract_init_block_number: Vec<TestCase<String, String>>,
@@ -143,6 +158,15 @@ pub struct HistoryTxRootProofData {
     extract_indices: Vec<TestCase<String, String>>,
     extract_proof_leaves: Vec<TestCase<String, String>>,
     extract_lemmas: Vec<TestCase<String, String>>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct CKBUnlockTokenParamData {
+    // members of HistoryTxRootProof
+    extract_history_tx_root_proof: Vec<TestCase<String, String>>,
+    extract_tx_proofs: Vec<TestCase<String, String>>,
+    extract_tx_proof_by_idx: Vec<TestCase<String, String>>,
 }
 
 impl Default for Loader {
@@ -223,7 +247,7 @@ fn generate_view_spv_test() {
 }
 
 #[test]
-fn generate_view_history_tx_proof_test() {
+fn generate_view_history_tx_root_proof_test() {
     let mut test_data = HistoryTxRootProofData::default();
     generate_tx_root_proof_test(&mut test_data);
 
@@ -255,6 +279,36 @@ fn generate_eaglesong_fuzzy_test() {
 
     // store json string to file
     Loader::default().store_test_data(TEST_FUZZY_TEST_FILE_NAME, &test_data);
+}
+
+#[test]
+fn generate_view_history_tx_proof_test() {
+    let mut rpc_client = HttpRpcClient::new(MAINNET_RPC_URL.to_owned());
+    let tx_hashes = vec![
+        h256!("0x39e33c8ad2e7e4eb71610d2bcdfbb0cb0fde2f96418256914ad2f5be1d6e9331"),
+        h256!("0x3827275f7a9785b09d85c2e687338a3dfb3978656747c2449685f31293210e2f"),
+        h256!("0x02acc5ccc6073f371df6a89a6a1c22b567dbd1d82be2114c277d3f0f0cd07915"),
+        h256!("0x477f3cce8c1a61d35056dec9e0e2ba135614ce93cca3f898fe702b9774ee4d76"),
+        h256!("0x385dfb0153a0e3aec760120c4e333a4a6bec91eeaca359ef714709588d23ca16"),
+        h256!("0x2154d077a6af711d93e8c7f75e3281a64708f97c2d485e5ecafaae12bdeecd7c"),
+        h256!("0xc2927c4b276998d6039e51545d419a8661b05ba5dc586ee26ae3ba9f9c5f7db9"),
+        h256!("0x8957ac508487de2d297a2fc8278980c17fe375d0878c039b215ac0f5d321c75b"),
+    ];
+
+    let mut test_data = HistoryTxProofData::default();
+    generate_history_tx_proof_tests(&mut test_data, tx_hashes);
+
+    // store json string to file
+    Loader::default().store_test_data(TEST_VIEW_HISTORY_TX_PROOF_FILE_NAME, &test_data);
+}
+
+#[test]
+fn generate_view_unlock_token_param_test() {
+    let mut test_data = CKBUnlockTokenParamData::default();
+    generate_unlock_token_param_test(&mut test_data);
+
+    // store json string to file
+    Loader::default().store_test_data(TEST_VIEW_UNLOCK_TOKEN_PARAM, &test_data);
 }
 
 pub fn generate_script_tests(
@@ -391,6 +445,62 @@ pub fn generate_spv_tests(test_data: &mut SpvRpcData, tx_hashes: Vec<H256>) {
     }
 }
 
+pub fn generate_history_tx_proof_tests(test_data: &mut HistoryTxProofData, tx_hashes: Vec<H256>) {
+    let mut tx_proofs: Vec<CKBHistoryTxProof> = vec![];
+    let tx_hashes_clone = tx_hashes.clone();
+    for tx_hash in tx_hashes {
+        let tx_proof =
+            generate_history_tx_proof(tx_hash.clone()).expect("CKBTxProof generated failed");
+        tx_proofs.push(tx_proof);
+    }
+
+    // tx_proof items test
+    let mut idx = 0usize;
+    for tx_proof in tx_proofs {
+        let tx_proof_clone = tx_proof.clone();
+        let mol_tx_proof: ckb_tx_proof::CKBHistoryTxProof = tx_proof.clone().into();
+        let mol_hex = format!("0x{}", hex::encode(mol_tx_proof.as_bytes().as_ref()));
+
+        test_data.extract_block_number.push(TestCase {
+            input: mol_hex.clone(),
+            output: format!("{}", tx_proof.block_number),
+        });
+
+        test_data.extract_tx_merkle_index.push(TestCase {
+            input: mol_hex.clone(),
+            output: format!("{}", tx_proof.tx_merkle_index),
+        });
+
+        test_data.extract_witnesses_root.push(TestCase {
+            input: mol_hex.clone(),
+            output: tx_proof.witnesses_root,
+        });
+
+        test_data.extract_lemmas.push(TestCase {
+            input: mol_hex.clone(),
+            output: format!(
+                "0x{}",
+                hex::encode(mol_tx_proof.lemmas().as_bytes().slice(4..))
+            ),
+        });
+
+        test_data.extract_raw_transaction.push(TestCase {
+            input: mol_hex.clone(),
+            output: format!(
+                "0x{}",
+                hex::encode(mol_tx_proof.raw_transaction().as_bytes())
+            ),
+        });
+
+        test_data.calc_tx_hash.push(TestCase {
+            input: mol_hex.clone(),
+            output: tx_hashes_clone.get(idx).unwrap().clone(),
+        });
+
+        idx = idx + 1;
+    }
+}
+
 pub fn generate_tx_root_proof_test(test_data: &mut HistoryTxRootProofData) {
     let block_numbers_vec = vec![
         vec![1u64, 2, 3, 4, 5, 6, 7, 8, 12, 16],
@@ -418,7 +528,7 @@ pub fn generate_tx_root_proof_test(test_data: &mut HistoryTxRootProofData) {
     for proof in history_tx_root_proofs {
         let expect_root = verify_ckb_history_tx_root_proof(proof.clone()).unwrap();
         dbg!(expect_root.pack());
-        let mol_proof: ckb_tx_proof::CkbHistoryTxRootProof = proof.clone().into();
+        let mol_proof: ckb_tx_proof::CKBHistoryTxRootProof = proof.clone().into();
         let mol_hex = format!("0x{}", hex::encode(mol_proof.as_bytes().as_ref()));
 
         test_data.extract_init_block_number.push(TestCase {
@@ -455,6 +565,57 @@ pub fn generate_tx_root_proof_test(test_data: &mut HistoryTxRootProofData) {
             ),
         });
     }
+}
+
+pub fn generate_unlock_token_param_test(test_data: &mut CKBUnlockTokenParamData) {
+    let numbers = vec![3_028_129u64, 3_028_130, 3_028_136, 3_028_139, 3_028_166];
+
+    let tx_hashes = vec![
+        h256!("0x385dfb0153a0e3aec760120c4e333a4a6bec91eeaca359ef714709588d23ca16"),
+        h256!("0x2154d077a6af711d93e8c7f75e3281a64708f97c2d485e5ecafaae12bdeecd7c"),
+        h256!("0xc2927c4b276998d6039e51545d419a8661b05ba5dc586ee26ae3ba9f9c5f7db9"),
+        h256!("0x8957ac508487de2d297a2fc8278980c17fe375d0878c039b215ac0f5d321c75b"),
+    ];
+    let history_tx_root_proof = generate_ckb_history_tx_root_proof(
+        numbers.first().unwrap().clone(),
+        numbers.last().unwrap().clone(),
+        numbers,
+    )
+    .unwrap();
+    dbg!("generate history_tx_root_proof success");
+    let mol_tx_root_proof: ckb_tx_proof::CKBHistoryTxRootProof =
+        history_tx_root_proof.clone().into();
+    let mol_tx_root_proof_hex = format!("0x{}", hex::encode(mol_tx_root_proof.as_bytes().as_ref()));
+
+    let mut tx_proofs = vec![];
+    let mut idx = 0u32;
+    for tx_hash in tx_hashes {
+        let tx_proof =
+            generate_history_tx_proof(tx_hash.clone()).expect("CKBTxProof generated failed");
+
+        let mol_tx_proof: ckb_tx_proof::CKBHistoryTxProof = tx_proof.clone().into();
+        let mol_tx_proof_hex = format!("0x{}", hex::encode(mol_tx_proof.as_bytes().as_ref()));
+        test_data.extract_tx_proof_by_idx.push(TestCase {
+            input: format!("{}", idx),
+            output: mol_tx_proof_hex,
+        });
+        idx = idx + 1;
+        tx_proofs.push(tx_proof);
+    }
+
+    let unlock_param = CKBUnlockTokenParam {
+        history_tx_root_proof,
+        tx_proofs,
+    };
+
+    // let mol_raw_header_hex = format!("0x{}", hex::encode(mol_raw_header.as_bytes().as_ref()));
+    let mol_unlock_param: ckb_tx_proof::CKBUnlockTokenParam = unlock_param.into();
+    let mol_unlock_param_hex = format!("0x{}", hex::encode(mol_unlock_param.as_bytes().as_ref()));
+
+    test_data.extract_history_tx_root_proof.push(TestCase {
+        input: mol_unlock_param_hex,
+        output: mol_tx_root_proof_hex,
+    });
 }
 
 pub fn generate_header_tests(

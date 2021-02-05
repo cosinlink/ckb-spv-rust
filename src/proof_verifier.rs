@@ -80,6 +80,13 @@ pub fn sibling(input: u16) -> u16 {
     ((input + 1) ^ 1) - 1
 }
 
+pub fn sibling_64(input: u64) -> u64 {
+    if input == 0 {
+        return 0;
+    }
+    ((input + 1) ^ 1) - 1
+}
+
 pub fn parent(input: u16) -> u16 {
     if input == 0 {
         return 0;
@@ -87,7 +94,18 @@ pub fn parent(input: u16) -> u16 {
     (input - 1) >> 1
 }
 
+pub fn parent_64(input: u64) -> u64 {
+    if input == 0 {
+        return 0;
+    }
+    (input - 1) >> 1
+}
+
 pub fn is_left(input: u16) -> bool {
+    input & 1 == 1
+}
+
+pub fn is_left_64(input: u64) -> bool {
     input & 1 == 1
 }
 
@@ -192,7 +210,7 @@ pub fn verify_ckb_history_tx_root_proof(
             queue_head = queue_head + 1;
 
             next = indices.get(queue_head);
-            if next.is_some() && next.unwrap().clone() == sibling(node_index) {
+            if next.is_some() && next.unwrap().clone() == sibling_64(node_index) {
                 node_sibling = queue.get(queue_head).unwrap().clone();
                 queue_head = queue_head + 1;
             } else {
@@ -203,7 +221,7 @@ pub fn verify_ckb_history_tx_root_proof(
                 lemmas_index += 1;
             }
 
-            res = if node_index < sibling(node_index) {
+            res = if node_index < sibling_64(node_index) {
                 // dbg!(node.pack().clone(), node_sibling.pack().clone());
                 merge(node.pack(), node_sibling.pack())
             } else {
@@ -214,7 +232,7 @@ pub fn verify_ckb_history_tx_root_proof(
             // dbg!(res.clone());
 
             queue.push(res.unpack());
-            indices.push(parent(node_index));
+            indices.push(parent_64(node_index));
             queue_tail = queue_tail + 1;
         }
         node
