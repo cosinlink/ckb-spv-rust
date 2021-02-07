@@ -22,6 +22,7 @@ faster-hex = "0.4"
 eaglesong = "0.1"
 molecule = { version = "0.6", default-features = false }
 numext-fixed-uint = { version = "0.1", features = ["support_rand", "support_heapsize", "support_serde"] }
+tiny-keccak = { version = "2.0.0", features = ["keccak"] }
 
 ckb-jsonrpc-types = { git = "https://github.com/nervosnetwork/ckb", tag = "v0.36.0-rc2" }
 ckb-hash = { git = "https://github.com/nervosnetwork/ckb", tag = "v0.36.0-rc2" }

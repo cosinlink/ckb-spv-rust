@@ -503,12 +503,12 @@ pub fn generate_history_tx_proof_tests(test_data: &mut HistoryTxProofData, tx_ha
 
 pub fn generate_tx_root_proof_test(test_data: &mut HistoryTxRootProofData) {
     let block_numbers_vec = vec![
-        vec![1u64, 2, 3, 4, 5, 6, 7, 8, 12, 16],
-        vec![1u64, 4, 5, 6, 7, 8, 12, 16],
-        vec![1u64, 9, 13, 16],
-        vec![3100u64, 3196, 3300],
-        vec![3100u64, 3196, 3199, 3222, 3233, 3300],
-        // vec![93100u64, 93196, 97700],
+        // vec![1u64, 2, 3, 4, 5, 6, 7, 8, 12, 16],
+        // vec![1u64, 4, 5, 6, 7, 8, 12, 16],
+        // vec![1u64, 9, 13, 16],
+        // vec![3100u64, 3196, 3300],
+        // vec![3100u64, 3196, 3199, 3222, 3233, 3300],
+        vec![3_028_129u64, 3_028_130, 3_028_136, 3_028_139, 3_028_166], // vec![93100u64, 93196, 97700],
     ];
 
     let mut history_tx_root_proofs: Vec<CKBHistoryTxRootProof> = vec![];

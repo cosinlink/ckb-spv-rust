@@ -173,6 +173,7 @@ pub fn generate_history_tx_proof(tx_hash: H256) -> Result<CKBHistoryTxProof, Str
     let mut tx_indices = HashSet::new();
     let mut tx_index = 0;
     let mut raw_tx: packed::RawTransaction;
+    let mut tx_root;
     match rpc_client.get_transaction(tx_hash.clone())? {
         Some(tx_with_status) => {
             retrieved_block_hash = tx_with_status.tx_status.block_hash;
@@ -180,6 +181,7 @@ pub fn generate_history_tx_proof(tx_hash: H256) -> Result<CKBHistoryTxProof, Str
                 .get_block(retrieved_block_hash.clone().expect("tx_block_hash is none"))?
                 .expect("block is none");
 
+            tx_root = retrieved_block.clone().header.inner.transactions_root;
             tx_index = get_tx_index(&tx_hash, &retrieved_block)
                 .expect("tx_hash not in retrieved_block") as u32;
             dbg!(tx_index);
@@ -200,7 +202,8 @@ pub fn generate_history_tx_proof(tx_hash: H256) -> Result<CKBHistoryTxProof, Str
     let tx_num = retrieved_block.transactions.len();
     let retrieved_block_hash = retrieved_block_hash.expect("checked len");
     dbg!(format!("{:#x}", retrieved_block_hash));
-    dbg!(format!("{}", retrieved_block.header.inner.number));
+    dbg!(tx_hash.clone().pack());
+    dbg!(tx_root.pack());
 
     let proof = CBMT::build_merkle_proof(
         &retrieved_block

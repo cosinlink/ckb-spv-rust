@@ -125,7 +125,8 @@ impl From<CKBHistoryTxProof> for ckb_tx_proof::CKBHistoryTxProof {
             .set(mol_lemmas_vec)
             .build();
 
-        let mol_raw_tx: ckb_tx_proof::Bytes = raw_transaction.pack().into();
+        let mol_raw_tx: ckb_tx_proof::Bytes =
+            ckb_tx_proof::Bytes::new_unchecked(raw_transaction.to_vec().into());
 
         // basic to target
         //  impl From<basic> for target
