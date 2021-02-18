@@ -43,6 +43,7 @@ const TEST_VIEWSPV_FILE_NAME: &str = "testSPV.json";
 const TEST_VIEW_HISTORY_TX_PROOF_FILE_NAME: &str = "testHistoryTxProof.json";
 const TEST_VIEW_HISTORY_TX_ROOT_FILE_NAME: &str = "testHistoryTxRoot.json";
 const TEST_VIEW_UNLOCK_TOKEN_PARAM: &str = "testUnlockTokenParam.json";
+const TEST_BENCH_UNLOCK_TOKEN_PARAM: &str = "testBenchUnlockTokenParam.json";
 const TEST_HEADERS_BENCH_FILE_NAME: &str = "testHeadersBench.json";
 const TEST_FUZZY_TEST_FILE_NAME: &str = "testEaglesongFuzzy.json";
 const TEST_DATA_DIR: &str = "test-data";
@@ -167,6 +168,12 @@ pub struct CKBUnlockTokenParamData {
     extract_history_tx_root_proof: Vec<TestCase<String, String>>,
     extract_tx_proofs: Vec<TestCase<String, String>>,
     extract_tx_proof_by_idx: Vec<TestCase<String, String>>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct BenchCKBUnlockTokenParamData {
+    tx_cnt_from_proof: Vec<TestCase<String, String>>,
 }
 
 impl Default for Loader {
@@ -309,6 +316,16 @@ fn generate_view_unlock_token_param_test() {
 
     // store json string to file
     Loader::default().store_test_data(TEST_VIEW_UNLOCK_TOKEN_PARAM, &test_data);
+}
+
+#[test]
+fn generate_bench_unlock_token_param_test() {
+    let mut test_data = BenchCKBUnlockTokenParamData::default();
+    let tx_cnts = vec![1, 2, 3, 4, 5, 10, 20, 30, 40, 50, 100];
+    generate_mock_unlock_token_param_test(&mut test_data, tx_cnts);
+
+    // store json string to file
+    Loader::default().store_test_data(TEST_BENCH_UNLOCK_TOKEN_PARAM, &test_data);
 }
 
 pub fn generate_script_tests(
@@ -616,6 +633,51 @@ pub fn generate_unlock_token_param_test(test_data: &mut CKBUnlockTokenParamData)
         input: mol_unlock_param_hex,
         output: mol_tx_root_proof_hex,
     });
+}
+
+pub fn generate_mock_unlock_token_param_test(
+    test_data: &mut BenchCKBUnlockTokenParamData,
+    tx_cnts: Vec<u32>,
+) {
+    let numbers = vec![3_028_129u64, 3_028_130, 3_028_136, 3_028_139, 3_028_166];
+
+    let history_tx_root_proof = generate_ckb_history_tx_root_proof(
+        numbers.first().unwrap().clone(),
+        numbers.last().unwrap().clone(),
+        numbers,
+    )
+    .unwrap();
+    dbg!("generate history_tx_root_proof success");
+    let mol_tx_root_proof: ckb_tx_proof::CKBHistoryTxRootProof =
+        history_tx_root_proof.clone().into();
+    let mol_tx_root_proof_hex = format!("0x{}", hex::encode(mol_tx_root_proof.as_bytes().as_ref()));
+
+    // tx proofs
+    let mut tx_hash = h256!("0x385dfb0153a0e3aec760120c4e333a4a6bec91eeaca359ef714709588d23ca16");
+    let tx_proof = generate_history_tx_proof(tx_hash.clone()).expect("CKBTxProof generated failed");
+
+    for tx_cnt in tx_cnts {
+        let history_tx_root_proof = history_tx_root_proof.clone();
+        let tx_proofs = {
+            let mut proofs = vec![];
+            for i in 0..tx_cnt {
+                proofs.push(tx_proof.clone());
+            }
+            proofs
+        };
+
+        let unlock_param = CKBUnlockTokenParam {
+            history_tx_root_proof,
+            tx_proofs,
+        };
+        let mol_unlock_param: ckb_tx_proof::CKBUnlockTokenParam = unlock_param.into();
+        let mol_unlock_param_hex =
+            format!("0x{}", hex::encode(mol_unlock_param.as_bytes().as_ref()));
+        test_data.tx_cnt_from_proof.push(TestCase {
+            input: mol_unlock_param_hex,
+            output: format!("{}", tx_cnt),
+        })
+    }
 }
 
 pub fn generate_header_tests(
